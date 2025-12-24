@@ -16,12 +16,12 @@ body {
     background: var(--classic-primary);
 }
 
-.pf-c-button--primary {
+.pf-c-button.pf-m-primary {
     background: var(--classic-primary);
     border-color: var(--classic-primary);
 }
 
-.pf-c-button--primary:hover {
+.pf-c-button.pf-m-primary:hover {
     background: var(--classic-secondary);
     border-color: var(--classic-secondary);
 }

@@ -1,11 +1,11 @@
 # Auth41 Themes Plugin
 
-A Keycloak theme provider plugin with dynamic theme switching capabilities based on realm, client, and user attributes.
+A Keycloak theme provider plugin with dynamic theme switching capabilities based on realm and client.
 
 ## Features
 
 - **Dynamic Theme Selection**: Automatically select themes based on context
-- **Priority-Based Matching**: User attributes > Client > Realm > Default
+- **Priority-Based Matching**: Client > Realm > Default
 - **Three Demo Themes Included**:
   - **auth41-classic**: Professional enterprise theme with navy blue colors
   - **auth41-modern**: Contemporary theme with purple gradients
@@ -276,10 +276,9 @@ $KEYCLOAK_HOME/bin/kc.sh start
 
 The plugin selects themes in this priority order:
 
-1. **User Attribute** (highest priority)
-2. **Client ID**
-3. **Realm Name**
-4. **Default Theme** (lowest priority)
+1. **Client ID** (highest priority)
+2. **Realm Name**
+3. **Default Theme** (lowest priority)
 
 ### Option 1: System Properties (Static Configuration)
 
@@ -296,9 +295,6 @@ Add to Keycloak startup configuration:
 --spi-theme-selector-auth41-theme-selector-client-mobile-app=auth41-modern \
 --spi-theme-selector-auth41-theme-selector-client-admin-portal=auth41-classic \
 
-# User attribute configuration
---spi-theme-selector-auth41-theme-selector-user-attr-enabled=true \
---spi-theme-selector-auth41-theme-selector-user-attr-name=theme \
 
 # Default themes by type
 --spi-theme-selector-auth41-theme-selector-default-login=auth41-classic \
@@ -312,7 +308,6 @@ Or in `conf/keycloak.conf`:
 spi-theme-selector-provider=auth41-theme-selector
 spi-theme-selector-auth41-theme-selector-realm-master=auth41-classic
 spi-theme-selector-auth41-theme-selector-client-mobile-app=auth41-modern
-spi-theme-selector-auth41-theme-selector-user-attr-enabled=true
 ```
 
 ### Option 2: Realm Attributes (Dynamic Configuration)
@@ -324,13 +319,6 @@ Configure in Keycloak Admin Console:
    - `auth41.theme.default` = `auth41-classic`
    - `auth41.theme.client.mobile-app` = `auth41-modern`
    - `auth41.theme.client.web-portal` = `auth41-classic`
-
-### Option 3: User Attributes (Per-User Themes)
-
-1. Enable user attribute selection (see system properties above)
-2. Add attribute to user profile:
-   - Go to **Users → [Select User] → Attributes**
-   - Add attribute: `theme` = `auth41-modern`
 
 ## Configuration Examples
 
@@ -359,19 +347,6 @@ spi-theme-selector-auth41-theme-selector-client-admin-console=auth41-classic
 
 # Customer portal uses minimal theme
 spi-theme-selector-auth41-theme-selector-client-customer-portal=auth41-minimal
-```
-
-### Example 3: User-Selectable Themes
-
-```properties
-# Enable user attribute theme selection
-spi-theme-selector-auth41-theme-selector-user-attr-enabled=true
-spi-theme-selector-auth41-theme-selector-user-attr-name=preferred-theme
-
-# Users can set their preferred-theme attribute to:
-# - auth41-classic
-# - auth41-modern
-# - auth41-minimal
 ```
 
 ## Theme Details
@@ -503,8 +478,6 @@ mvn clean package
 |-------------|-------------|---------|
 | `realm-{name}` | Maps realm to theme | `realm-master=auth41-classic` |
 | `client-{id}` | Maps client to theme | `client-mobile-app=auth41-modern` |
-| `user-attr-enabled` | Enable user attribute selection | `user-attr-enabled=true` |
-| `user-attr-name` | User attribute name | `user-attr-name=theme` |
 | `default-{type}` | Default theme for type | `default-login=auth41-classic` |
 
 ## License

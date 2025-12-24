@@ -9,7 +9,7 @@
     background: linear-gradient(135deg, var(--modern-primary) 0%, var(--modern-secondary) 100%);
 }
 
-.pf-c-button--primary {
+.pf-c-button.pf-m-primary {
     background: linear-gradient(135deg, var(--modern-primary) 0%, var(--modern-secondary) 100%);
     border: none;
     border-radius: 8px;

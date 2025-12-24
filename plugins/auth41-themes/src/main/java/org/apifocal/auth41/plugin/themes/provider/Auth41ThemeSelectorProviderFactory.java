@@ -33,7 +33,6 @@ public class Auth41ThemeSelectorProviderFactory implements ThemeSelectorProvider
         logger.infof("Auth41 Theme Selector initialized with provider ID: %s", PROVIDER_ID);
         logger.infof("Realm mappings: %s", this.config.getRealmMappings());
         logger.infof("Client mappings: %s", this.config.getClientMappings());
-        logger.infof("User attribute selection enabled: %s", this.config.isUserAttributeEnabled());
     }
 
     @Override

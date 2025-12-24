@@ -5,7 +5,9 @@ import org.keycloak.Config;
 import org.keycloak.models.RealmModel;
 import org.keycloak.theme.Theme;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Configuration for theme mappings from multiple sources.
@@ -19,15 +21,11 @@ public class ThemeMappingConfig {
 
     private static final String REALM_PREFIX = "realm-";
     private static final String CLIENT_PREFIX = "client-";
-    private static final String USER_ATTR_PREFIX = "user-attr-";
     private static final String DEFAULT_PREFIX = "default-";
 
-    private final Map<String, String> realmMappings = new HashMap<>();
-    private final Map<String, String> clientMappings = new HashMap<>();
-    private final Map<String, String> userAttributeMappings = new HashMap<>();
-    private final Map<Theme.Type, String> defaultThemes = new EnumMap<>(Theme.Type.class);
-    private boolean userAttributeEnabled = false;
-    private String userAttributeName = "theme";
+    private final Map<String, String> realmMappings = new ConcurrentHashMap<>();
+    private final Map<String, String> clientMappings = new ConcurrentHashMap<>();
+    private final Map<Theme.Type, String> defaultThemes = new ConcurrentHashMap<>();
 
     /**
      * Load configuration from Keycloak Config.Scope
@@ -44,28 +42,34 @@ public class ThemeMappingConfig {
         for (String key : config.getPropertyNames()) {
             String value = config.get(key);
 
+            // Validate that value is not null or empty
+            if (value == null || value.trim().isEmpty()) {
+                logger.warnf("Ignoring configuration key '%s' with null or empty value", key);
+                continue;
+            }
+
             if (key.startsWith(REALM_PREFIX)) {
                 String realmName = key.substring(REALM_PREFIX.length());
+                if (realmName.isEmpty()) {
+                    logger.warnf("Ignoring realm mapping with empty realm name: %s", key);
+                    continue;
+                }
                 mappingConfig.realmMappings.put(realmName, value);
                 logger.infof("Loaded realm mapping: %s -> %s", realmName, value);
             } else if (key.startsWith(CLIENT_PREFIX)) {
                 String clientId = key.substring(CLIENT_PREFIX.length());
+                if (clientId.isEmpty()) {
+                    logger.warnf("Ignoring client mapping with empty client ID: %s", key);
+                    continue;
+                }
                 mappingConfig.clientMappings.put(clientId, value);
                 logger.infof("Loaded client mapping: %s -> %s", clientId, value);
-            } else if (key.startsWith(USER_ATTR_PREFIX)) {
-                String attrName = key.substring(USER_ATTR_PREFIX.length());
-                if ("enabled".equals(attrName)) {
-                    mappingConfig.userAttributeEnabled = Boolean.parseBoolean(value);
-                    logger.infof("User attribute theme selection enabled: %s", value);
-                } else if ("name".equals(attrName)) {
-                    mappingConfig.userAttributeName = value;
-                    logger.infof("User attribute name set to: %s", value);
-                } else {
-                    mappingConfig.userAttributeMappings.put(attrName, value);
-                    logger.infof("Loaded user attribute mapping: %s -> %s", attrName, value);
-                }
             } else if (key.startsWith(DEFAULT_PREFIX)) {
                 String typeStr = key.substring(DEFAULT_PREFIX.length()).toUpperCase();
+                if (typeStr.isEmpty()) {
+                    logger.warnf("Ignoring default theme mapping with empty type: %s", key);
+                    continue;
+                }
                 try {
                     Theme.Type type = Theme.Type.valueOf(typeStr);
                     mappingConfig.defaultThemes.put(type, value);
@@ -76,10 +80,9 @@ public class ThemeMappingConfig {
             }
         }
 
-        logger.infof("Loaded theme configuration: %d realm mappings, %d client mappings, %d user attr mappings",
+        logger.infof("Loaded theme configuration: %d realm mappings, %d client mappings",
                 mappingConfig.realmMappings.size(),
-                mappingConfig.clientMappings.size(),
-                mappingConfig.userAttributeMappings.size());
+                mappingConfig.clientMappings.size());
 
         return mappingConfig;
     }
@@ -106,10 +109,20 @@ public class ThemeMappingConfig {
                 continue;
             }
 
+            // Validate that value is not null or empty
+            if (value == null || value.trim().isEmpty()) {
+                logger.warnf("Ignoring realm attribute '%s' with null or empty value", key);
+                continue;
+            }
+
             String subKey = key.substring("auth41.theme.".length());
 
             if (subKey.startsWith("client.")) {
                 String clientId = subKey.substring("client.".length());
+                if (clientId.isEmpty()) {
+                    logger.warnf("Ignoring realm attribute with empty client ID: %s", key);
+                    continue;
+                }
                 clientMappings.put(clientId, value);
                 logger.debugf("Loaded client mapping from realm attribute: %s -> %s", clientId, value);
             } else if (subKey.equals("default")) {
@@ -130,20 +143,8 @@ public class ThemeMappingConfig {
         return clientMappings.get(clientId);
     }
 
-    public String getUserAttributeMapping(String attributeValue) {
-        return userAttributeMappings.get(attributeValue);
-    }
-
     public String getDefaultTheme(Theme.Type type) {
         return defaultThemes.get(type);
-    }
-
-    public boolean isUserAttributeEnabled() {
-        return userAttributeEnabled;
-    }
-
-    public String getUserAttributeName() {
-        return userAttributeName;
     }
 
     public Map<String, String> getRealmMappings() {
