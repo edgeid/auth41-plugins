@@ -1,0 +1,21 @@
+/* Auth41 Modern Theme - Account Console */
+
+:root {
+    --modern-primary: #6366f1;
+    --modern-secondary: #8b5cf6;
+}
+
+.pf-c-page__header {
+    background: linear-gradient(135deg, var(--modern-primary) 0%, var(--modern-secondary) 100%);
+}
+
+.pf-c-button--primary {
+    background: linear-gradient(135deg, var(--modern-primary) 0%, var(--modern-secondary) 100%);
+    border: none;
+    border-radius: 8px;
+}
+
+.pf-c-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+}

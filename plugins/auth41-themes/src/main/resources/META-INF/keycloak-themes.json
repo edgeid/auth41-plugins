@@ -1,0 +1,16 @@
+{
+  "themes": [
+    {
+      "name": "auth41-classic",
+      "types": ["login", "account", "email"]
+    },
+    {
+      "name": "auth41-modern",
+      "types": ["login", "account", "email"]
+    },
+    {
+      "name": "auth41-minimal",
+      "types": ["login", "email"]
+    }
+  ]
+}

@@ -19,7 +19,6 @@
     <description>Parent POM for Auth41 Keycloak plugins</description>
 
     <modules>
-        <!-- Plugin modules will be added here -->
-        <!-- Example: <module>auth41-foo</module> -->
+        <module>auth41-themes</module>
     </modules>
 </project>
