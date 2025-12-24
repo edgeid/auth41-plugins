@@ -3,10 +3,13 @@ package org.apifocal.auth41.plugin.themes.provider;
 import org.apifocal.auth41.plugin.themes.config.ThemeMappingConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.keycloak.Config;
 import org.keycloak.models.*;
 import org.keycloak.theme.Theme;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -57,9 +60,22 @@ class Auth41ThemeSelectorProviderTest {
 
     @Test
     void testGetThemeName_WithRealmMapping() {
-        // This test would require a way to set realm mappings in config
-        // For now, we're testing basic functionality
-        assertNotNull(provider);
+        // Mock Config.Scope to provide realm mapping configuration
+        Config.Scope mockConfig = mock(Config.Scope.class);
+        when(mockConfig.getPropertyNames()).thenReturn(Collections.singleton("realm-test-realm"));
+        when(mockConfig.get("realm-test-realm")).thenReturn("custom-theme");
+        
+        // Load configuration from the mocked scope
+        ThemeMappingConfig configWithMapping = ThemeMappingConfig.loadFromConfig(mockConfig);
+        
+        // Create provider with the configured mapping
+        Auth41ThemeSelectorProvider providerWithMapping = new Auth41ThemeSelectorProvider(session, configWithMapping);
+        
+        // Call getThemeName which should use the realm mapping
+        String themeName = providerWithMapping.getThemeName(Theme.Type.LOGIN);
+        
+        // Verify the correct theme is returned based on realm mapping
+        assertEquals("custom-theme", themeName, "Should return the theme mapped to test-realm");
     }
 
     @Test
