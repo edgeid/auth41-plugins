@@ -1,0 +1,41 @@
+{
+  "network_id": "test-federation",
+  "topology_type": "hub-and-spoke",
+  "registry_version": "2024-12-24T10:00:00Z",
+  "providers": {
+    "hub-a": {
+      "issuer": "https://hub-a.test.federation.org",
+      "role": "hub"
+    },
+    "provider-b": {
+      "issuer": "https://provider-b.test.federation.org",
+      "role": "spoke"
+    },
+    "provider-c": {
+      "issuer": "https://provider-c.test.federation.org",
+      "role": "spoke"
+    }
+  },
+  "trust_relationships": [
+    {
+      "from": "hub-a",
+      "to": "provider-b",
+      "level": "explicit"
+    },
+    {
+      "from": "hub-a",
+      "to": "provider-c",
+      "level": "explicit"
+    },
+    {
+      "from": "provider-b",
+      "to": "hub-a",
+      "level": "explicit"
+    },
+    {
+      "from": "provider-c",
+      "to": "hub-a",
+      "level": "explicit"
+    }
+  ]
+}

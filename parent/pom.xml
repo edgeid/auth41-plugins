@@ -27,16 +27,22 @@
         <!-- Testing -->
         <junit.version>5.10.1</junit.version>
         <mockito.version>5.8.0</mockito.version>
+        <assertj.version>3.25.1</assertj.version>
 
         <!-- Logging -->
         <slf4j.version>2.0.9</slf4j.version>
         <logback.version>1.4.14</logback.version>
+        <jboss-logging.version>3.5.3.Final</jboss-logging.version>
+
+        <!-- Utilities -->
+        <jackson.version>2.16.1</jackson.version>
 
         <!-- Plugin versions -->
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.2.3</maven-surefire-plugin.version>
         <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
         <maven-assembly-plugin.version>3.6.0</maven-assembly-plugin.version>
+        <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -86,6 +92,19 @@
                 <version>${logback.version}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>org.jboss.logging</groupId>
+                <artifactId>jboss-logging</artifactId>
+                <version>${jboss-logging.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!-- JSON Processing -->
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
 
             <!-- Testing -->
             <dependency>
@@ -104,6 +123,12 @@
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-junit-jupiter</artifactId>
                 <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.assertj</groupId>
+                <artifactId>assertj-core</artifactId>
+                <version>${assertj.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
@@ -136,6 +161,25 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-assembly-plugin</artifactId>
                     <version>${maven-assembly-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco-maven-plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>report</id>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
