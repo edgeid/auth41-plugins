@@ -1,0 +1,247 @@
+/* Auth41 Classic Theme - Traditional Professional Styling */
+
+:root {
+    --classic-primary: #1e3a5f;
+    --classic-secondary: #2c5282;
+    --classic-accent: #4299e1;
+    --classic-light: #f7fafc;
+    --classic-border: #e2e8f0;
+    --classic-text: #2d3748;
+    --classic-error: #e53e3e;
+    --classic-success: #38a169;
+}
+
+body {
+    background: linear-gradient(135deg, var(--classic-light) 0%, #e6f2ff 100%);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.login-pf-page {
+    background: linear-gradient(135deg, var(--classic-light) 0%, #e6f2ff 100%);
+}
+
+#kc-header {
+    color: var(--classic-primary);
+    text-align: center;
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 2rem;
+}
+
+#kc-header-wrapper {
+    padding: 2rem 0;
+    text-align: center;
+}
+
+.card-pf {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(30, 58, 95, 0.1);
+    border: 1px solid var(--classic-border);
+    padding: 3rem;
+    max-width: 450px;
+    margin: 0 auto;
+}
+
+#kc-form {
+    margin: 0;
+}
+
+#kc-form-wrapper {
+    padding: 0;
+}
+
+.pf-c-form__group {
+    margin-bottom: 1.5rem;
+}
+
+.pf-c-form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--classic-border);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.pf-c-form-control:focus {
+    outline: none;
+    border-color: var(--classic-accent);
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+}
+
+.pf-c-button {
+    width: 100%;
+    padding: 0.875rem 1.5rem;
+    background: var(--classic-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 1rem;
+}
+
+.pf-c-button:hover {
+    background: var(--classic-secondary);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(30, 58, 95, 0.2);
+}
+
+.pf-c-button:active {
+    transform: translateY(0);
+}
+
+.pf-c-button.pf-m-secondary {
+    background: white;
+    color: var(--classic-primary);
+    border: 2px solid var(--classic-primary);
+}
+
+.pf-c-button.pf-m-secondary:hover {
+    background: var(--classic-light);
+}
+
+#kc-form-login {
+    margin-top: 1.5rem;
+}
+
+#kc-registration {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--classic-border);
+}
+
+#kc-registration a {
+    color: var(--classic-accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+#kc-registration a:hover {
+    text-decoration: underline;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.alert-error, .pf-c-alert.pf-m-danger {
+    background: #fff5f5;
+    border-left: 4px solid var(--classic-error);
+    color: #742a2a;
+}
+
+.alert-success, .pf-c-alert.pf-m-success {
+    background: #f0fff4;
+    border-left: 4px solid var(--classic-success);
+    color: #22543d;
+}
+
+.alert-warning {
+    background: #fffaf0;
+    border-left: 4px solid #dd6b20;
+    color: #744210;
+}
+
+.alert-info, .pf-c-alert.pf-m-info {
+    background: #ebf8ff;
+    border-left: 4px solid var(--classic-accent);
+    color: #2c5282;
+}
+
+#kc-form-options {
+    margin-top: 1rem;
+}
+
+#kc-form-options .checkbox {
+    display: flex;
+    align-items: center;
+}
+
+#kc-form-options label {
+    margin-left: 0.5rem;
+    color: var(--classic-text);
+}
+
+.kc-logo {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.kc-logo img {
+    max-width: 180px;
+    height: auto;
+}
+
+/* Social providers */
+#kc-social-providers {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--classic-border);
+}
+
+#kc-social-providers ul {
+    list-style: none;
+    padding: 0;
+}
+
+#kc-social-providers li {
+    margin-bottom: 0.75rem;
+}
+
+#kc-social-providers a {
+    display: block;
+    padding: 0.875rem;
+    border: 2px solid var(--classic-border);
+    border-radius: 8px;
+    text-align: center;
+    text-decoration: none;
+    color: var(--classic-text);
+    transition: all 0.2s ease;
+}
+
+#kc-social-providers a:hover {
+    border-color: var(--classic-accent);
+    background: var(--classic-light);
+}
+
+/* Password visibility toggle */
+.pf-c-form__group-control {
+    position: relative;
+}
+
+/* OTP */
+#kc-totp-settings {
+    margin-top: 1.5rem;
+}
+
+/* Info area */
+#kc-info {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: var(--classic-light);
+    border-radius: 8px;
+    text-align: center;
+}
+
+#kc-info-message {
+    color: var(--classic-text);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .card-pf {
+        padding: 2rem 1.5rem;
+        margin: 1rem;
+    }
+
+    #kc-header {
+        font-size: 1.5rem;
+    }
+}

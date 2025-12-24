@@ -1,0 +1,280 @@
+/* Auth41 Modern Theme - Contemporary Gradient Design */
+
+:root {
+    --modern-primary: #6366f1;
+    --modern-secondary: #8b5cf6;
+    --modern-accent: #ec4899;
+    --modern-dark: #1f2937;
+    --modern-light: #f9fafb;
+    --modern-border: #e5e7eb;
+}
+
+body {
+    background: linear-gradient(135deg, var(--modern-primary) 0%, var(--modern-secondary) 100%);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-pf-page {
+    background: transparent;
+}
+
+#kc-header {
+    color: white;
+    text-align: center;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#kc-header-wrapper {
+    padding: 2rem 0;
+    text-align: center;
+}
+
+.card-pf {
+    background: white;
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    border: none;
+    padding: 3rem;
+    max-width: 420px;
+    margin: 0 auto;
+    backdrop-filter: blur(10px);
+}
+
+#kc-form-wrapper {
+    padding: 0;
+}
+
+.pf-c-form__group {
+    margin-bottom: 1.5rem;
+}
+
+.pf-c-form-control {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    border: 2px solid var(--modern-border);
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: var(--modern-light);
+}
+
+.pf-c-form-control:focus {
+    outline: none;
+    border-color: var(--modern-primary);
+    background: white;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    transform: translateY(-2px);
+}
+
+.pf-c-button {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    background: linear-gradient(135deg, var(--modern-primary) 0%, var(--modern-secondary) 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-top: 1rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.pf-c-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--modern-secondary) 0%, var(--modern-accent) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.pf-c-button:hover::before {
+    opacity: 1;
+}
+
+.pf-c-button span {
+    position: relative;
+    z-index: 1;
+}
+
+.pf-c-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+}
+
+.pf-c-button:active {
+    transform: translateY(0);
+}
+
+.pf-c-button.pf-m-secondary {
+    background: white;
+    color: var(--modern-primary);
+    border: 2px solid var(--modern-primary);
+}
+
+.pf-c-button.pf-m-secondary::before {
+    background: var(--modern-light);
+}
+
+#kc-registration {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--modern-border);
+}
+
+#kc-registration a {
+    color: var(--modern-primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+#kc-registration a:hover {
+    color: var(--modern-secondary);
+}
+
+.alert, .pf-c-alert {
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    border: none;
+}
+
+.alert-error, .pf-c-alert.pf-m-danger {
+    background: linear-gradient(135deg, #fee 0%, #fdd 100%);
+    color: #991b1b;
+}
+
+.alert-success, .pf-c-alert.pf-m-success {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    color: #065f46;
+}
+
+.alert-warning {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+}
+
+.alert-info, .pf-c-alert.pf-m-info {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    color: #1e40af;
+}
+
+#kc-form-options {
+    margin-top: 1rem;
+}
+
+#kc-form-options .checkbox {
+    display: flex;
+    align-items: center;
+}
+
+#kc-form-options label {
+    margin-left: 0.5rem;
+    color: var(--modern-dark);
+}
+
+/* Custom checkbox */
+input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 2px solid var(--modern-border);
+    cursor: pointer;
+}
+
+input[type="checkbox"]:checked {
+    background: linear-gradient(135deg, var(--modern-primary) 0%, var(--modern-secondary) 100%);
+    border-color: var(--modern-primary);
+}
+
+/* Social providers */
+#kc-social-providers {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--modern-border);
+}
+
+#kc-social-providers ul {
+    list-style: none;
+    padding: 0;
+}
+
+#kc-social-providers li {
+    margin-bottom: 0.75rem;
+}
+
+#kc-social-providers a {
+    display: block;
+    padding: 1rem;
+    border: 2px solid var(--modern-border);
+    border-radius: 12px;
+    text-align: center;
+    text-decoration: none;
+    color: var(--modern-dark);
+    transition: all 0.3s ease;
+    background: var(--modern-light);
+}
+
+#kc-social-providers a:hover {
+    border-color: var(--modern-primary);
+    background: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+/* Info area */
+#kc-info {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: var(--modern-light);
+    border-radius: 12px;
+    text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .card-pf {
+        padding: 2rem 1.5rem;
+        margin: 1rem;
+        border-radius: 20px;
+    }
+
+    #kc-header {
+        font-size: 2rem;
+    }
+
+    body {
+        padding: 1rem;
+    }
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.card-pf {
+    animation: fadeIn 0.4s ease;
+}
