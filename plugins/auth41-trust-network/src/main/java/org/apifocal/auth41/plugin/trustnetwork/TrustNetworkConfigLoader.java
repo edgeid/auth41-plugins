@@ -14,10 +14,13 @@ import java.util.Map;
 /**
  * Loads trust network configuration from various sources.
  *
- * Supports loading from:
- * - Keycloak Config.Scope (system properties)
+ * Currently supports loading from:
  * - JSON files on classpath
  * - JSON strings
+ * - JSON input streams
+ *
+ * Future support planned for:
+ * - Keycloak Config.Scope (system properties) - TODO: implement config key discovery
  */
 public class TrustNetworkConfigLoader {
 
@@ -25,13 +28,18 @@ public class TrustNetworkConfigLoader {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
-     * Load trust network from Keycloak configuration
+     * Load trust network from Keycloak configuration.
      *
-     * Expected configuration format:
+     * NOTE: Currently only supports topology type from config. Provider and trust relationship
+     * discovery from config keys is not yet implemented. Use JSON-based loading for full functionality.
+     *
+     * Future expected configuration format:
      * spi-trust-network-config-based-network-<networkId>-topology-type=hub-and-spoke
      * spi-trust-network-config-based-network-<networkId>-provider-<providerId>-issuer=https://...
      * spi-trust-network-config-based-network-<networkId>-provider-<providerId>-role=hub
      * spi-trust-network-config-based-network-<networkId>-trust-<fromProvider>-<toProvider>=explicit
+     *
+     * TODO: Implement config key discovery mechanism for providers and trust relationships
      */
     public TrustNetwork loadFromConfig(Config.Scope config, String networkId) {
         logger.infof("Loading network %s from configuration", networkId);
@@ -166,8 +174,14 @@ public class TrustNetworkConfigLoader {
                 String levelStr = edge.path("level").asText("explicit");
 
                 if (!fromProvider.isEmpty() && !toProvider.isEmpty()) {
-                    TrustLevel level = TrustLevel.valueOf(levelStr.toUpperCase());
-                    builder.addTrustRelationship(fromProvider, toProvider, level);
+                    try {
+                        TrustLevel level = TrustLevel.valueOf(levelStr.toUpperCase());
+                        builder.addTrustRelationship(fromProvider, toProvider, level);
+                    } catch (IllegalArgumentException e) {
+                        logger.warnf("Invalid trust level '%s' for relationship from '%s' to '%s'; skipping...",
+                            levelStr, fromProvider, toProvider
+                        );
+                    }
                 }
             }
         }
@@ -177,21 +191,31 @@ public class TrustNetworkConfigLoader {
 
     /**
      * Discover provider IDs from configuration keys.
-     * This is a simplified implementation - you may need to enhance this
-     * based on how Keycloak exposes configuration keys.
+     *
+     * TODO: Not yet implemented. Keycloak's Config.Scope doesn't provide a way to enumerate
+     * all keys with a given prefix. Possible solutions:
+     * 1. Use system properties directly (System.getProperties()) and filter by prefix
+     * 2. Require explicit provider list in config (e.g., provider-ids=hub-a,provider-b,provider-c)
+     * 3. Use realm attributes instead of Config.Scope for dynamic configuration
+     *
+     * @return Empty set (providers must be loaded via JSON until this is implemented)
      */
     private java.util.Set<String> discoverProviderIds(Config.Scope config, String providerPrefix) {
-        // In a real implementation, you'd scan config keys
-        // For now, return empty set - providers must be loaded via JSON
+        // TODO: Implement config key discovery
+        logger.warnf("Config-based provider discovery not yet implemented; returning empty set");
         return java.util.Set.of();
     }
 
     /**
      * Discover trust relationship keys from configuration.
+     *
+     * TODO: Not yet implemented. See discoverProviderIds() for details.
+     *
+     * @return Empty set (trust relationships must be loaded via JSON until this is implemented)
      */
     private java.util.Set<String> discoverTrustKeys(Config.Scope config, String trustPrefix) {
-        // In a real implementation, you'd scan config keys
-        // For now, return empty set - trust relationships must be loaded via JSON
+        // TODO: Implement config key discovery
+        logger.warnf("Config-based trust relationship discovery not yet implemented; returning empty set");
         return java.util.Set.of();
     }
 }

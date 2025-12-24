@@ -83,18 +83,18 @@ Provider B trusts Hub A (explicit)
 
 ### Loading Configuration
 
-Place your trust network configuration in `src/main/resources/` and configure the provider:
+**Current Implementation: JSON-based loading only**
 
-```properties
-spi-trust-network-config-based-default-network-id=healthcare-federation
-```
-
-Or load programmatically:
+Place your trust network configuration JSON file in `src/main/resources/` and reference it:
 
 ```java
 TrustNetworkConfigLoader loader = new TrustNetworkConfigLoader();
 TrustNetwork network = loader.loadFromResource("my-network.json");
 ```
+
+**Note:** System properties-based configuration (Config.Scope) is not yet fully implemented.
+The config loader currently only reads the topology type from system properties. For full
+functionality (providers and trust relationships), use JSON-based loading.
 
 ## API Usage
 
@@ -173,13 +173,20 @@ All operations are thread-safe:
 - Trust relationships use concurrent collections
 - Immutable data structures (unmodifiable maps/sets)
 
+## Current Limitations
+
+- **Config.Scope-based loading**: Only topology type can be loaded from system properties. Providers and trust relationships must be loaded from JSON files. Config key discovery mechanism is not yet implemented.
+- **No remote loading**: Networks must be bundled with the plugin JAR. Remote fetching from governance registry planned for future release.
+- **No cache expiration**: Networks are cached indefinitely once loaded. TTL-based expiration planned for future release.
+
 ## Future Enhancements
 
-- Integration with governance registry (fetch networks remotely)
-- TTL-based cache expiration
-- Network update notifications
-- Support for loading from realm attributes
-- Additional topology validation
+- **Config.Scope discovery**: Implement mechanism to discover providers and trust relationships from system properties
+- **Integration with governance registry**: Fetch networks remotely from central registry
+- **TTL-based cache expiration**: Automatic refresh of stale network data
+- **Network update notifications**: Real-time updates when trust network changes
+- **Realm attributes support**: Load configuration from Keycloak realm attributes for dynamic management
+- **Additional topology validation**: Validate network structure against topology rules
 
 ## See Also
 

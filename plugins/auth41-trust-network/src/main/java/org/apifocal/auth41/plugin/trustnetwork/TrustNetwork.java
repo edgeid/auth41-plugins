@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Represents a trust network graph with providers and their trust relationships.
@@ -27,14 +26,12 @@ public class TrustNetwork {
     private TrustNetwork(Builder builder) {
         this.networkId = Objects.requireNonNull(builder.networkId, "networkId cannot be null");
         this.topologyType = builder.topologyType;
-        this.providers = Collections.unmodifiableMap(new ConcurrentHashMap<>(builder.providers));
+        this.providers = Collections.unmodifiableMap(new java.util.HashMap<>(builder.providers));
 
-        // Create a mutable set, populate it, then make it unmodifiable
-        Set<TrustEdge> tempTrustRelationships = ConcurrentHashMap.newKeySet(builder.trustRelationships.size());
-        tempTrustRelationships.addAll(builder.trustRelationships);
-        this.trustRelationships = Collections.unmodifiableSet(tempTrustRelationships);
+        // Create a defensive copy as a HashSet, then make it unmodifiable
+        this.trustRelationships = Collections.unmodifiableSet(new java.util.HashSet<>(builder.trustRelationships));
 
-        this.metadata = Collections.unmodifiableMap(new ConcurrentHashMap<>(builder.metadata));
+        this.metadata = Collections.unmodifiableMap(new java.util.HashMap<>(builder.metadata));
         this.version = builder.version != null ? builder.version : Instant.now();
     }
 
@@ -47,15 +44,15 @@ public class TrustNetwork {
     }
 
     public Map<String, ProviderNode> getProviders() {
-        return providers;
+        return Collections.unmodifiableMap(new java.util.HashMap<>(providers));
     }
 
     public Set<TrustEdge> getTrustRelationships() {
-        return trustRelationships;
+        return Collections.unmodifiableSet(new java.util.HashSet<>(trustRelationships));
     }
 
     public Map<String, String> getMetadata() {
-        return metadata;
+        return Collections.unmodifiableMap(new java.util.HashMap<>(metadata));
     }
 
     public Instant getVersion() {
@@ -92,9 +89,9 @@ public class TrustNetwork {
     public static class Builder {
         private String networkId;
         private String topologyType;
-        private final Map<String, ProviderNode> providers = new ConcurrentHashMap<>();
-        private final Set<TrustEdge> trustRelationships = ConcurrentHashMap.newKeySet();
-        private final Map<String, String> metadata = new ConcurrentHashMap<>();
+        private final Map<String, ProviderNode> providers = new java.util.HashMap<>();
+        private final Set<TrustEdge> trustRelationships = new java.util.HashSet<>();
+        private final Map<String, String> metadata = new java.util.HashMap<>();
         private Instant version;
 
         public Builder networkId(String networkId) {

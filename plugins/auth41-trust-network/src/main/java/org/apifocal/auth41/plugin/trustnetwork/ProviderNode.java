@@ -3,7 +3,6 @@ package org.apifocal.auth41.plugin.trustnetwork;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Represents a provider node in the trust network.
@@ -26,7 +25,7 @@ public class ProviderNode {
         this.providerId = Objects.requireNonNull(builder.providerId, "providerId cannot be null");
         this.issuer = Objects.requireNonNull(builder.issuer, "issuer cannot be null");
         this.metadata = builder.metadata != null ? builder.metadata : new ProviderMetadata();
-        this.attributes = Collections.unmodifiableMap(new ConcurrentHashMap<>(builder.attributes));
+        this.attributes = Collections.unmodifiableMap(new java.util.HashMap<>(builder.attributes));
     }
 
     public String getProviderId() {
@@ -42,7 +41,7 @@ public class ProviderNode {
     }
 
     public Map<String, String> getAttributes() {
-        return attributes;
+        return Collections.unmodifiableMap(new java.util.HashMap<>(attributes));
     }
 
     /**
@@ -60,7 +59,7 @@ public class ProviderNode {
         private String providerId;
         private String issuer;
         private ProviderMetadata metadata;
-        private final Map<String, String> attributes = new ConcurrentHashMap<>();
+        private final Map<String, String> attributes = new java.util.HashMap<>();
 
         public Builder providerId(String providerId) {
             this.providerId = providerId;
