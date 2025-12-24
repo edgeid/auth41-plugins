@@ -20,5 +20,6 @@
 
     <modules>
         <module>auth41-themes</module>
+        <module>auth41-trust-network</module>
     </modules>
 </project>
