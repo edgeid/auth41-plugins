@@ -3,10 +3,13 @@ package org.apifocal.auth41.plugin.themes.provider;
 import org.apifocal.auth41.plugin.themes.config.ThemeMappingConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.keycloak.Config;
 import org.keycloak.models.*;
 import org.keycloak.theme.Theme;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -57,18 +60,13 @@ class Auth41ThemeSelectorProviderTest {
 
     @Test
     void testGetThemeName_WithRealmMapping() {
-        // Configure a realm mapping
-        ThemeMappingConfig configWithMapping = new ThemeMappingConfig();
-        // Use reflection to add a realm mapping for testing
-        try {
-            java.lang.reflect.Field realmMappingsField = ThemeMappingConfig.class.getDeclaredField("realmMappings");
-            realmMappingsField.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            java.util.Map<String, String> realmMappings = (java.util.Map<String, String>) realmMappingsField.get(configWithMapping);
-            realmMappings.put("test-realm", "custom-theme");
-        } catch (Exception e) {
-            fail("Failed to set up test configuration: " + e.getMessage());
-        }
+        // Mock Config.Scope to provide realm mapping configuration
+        Config.Scope mockConfig = mock(Config.Scope.class);
+        when(mockConfig.getPropertyNames()).thenReturn(Collections.singleton("realm-test-realm"));
+        when(mockConfig.get("realm-test-realm")).thenReturn("custom-theme");
+        
+        // Load configuration from the mocked scope
+        ThemeMappingConfig configWithMapping = ThemeMappingConfig.loadFromConfig(mockConfig);
         
         // Create provider with the configured mapping
         Auth41ThemeSelectorProvider providerWithMapping = new Auth41ThemeSelectorProvider(session, configWithMapping);
