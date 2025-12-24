@@ -57,9 +57,27 @@ class Auth41ThemeSelectorProviderTest {
 
     @Test
     void testGetThemeName_WithRealmMapping() {
-        // This test would require a way to set realm mappings in config
-        // For now, we're testing basic functionality
-        assertNotNull(provider);
+        // Configure a realm mapping
+        ThemeMappingConfig configWithMapping = new ThemeMappingConfig();
+        // Use reflection to add a realm mapping for testing
+        try {
+            java.lang.reflect.Field realmMappingsField = ThemeMappingConfig.class.getDeclaredField("realmMappings");
+            realmMappingsField.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, String> realmMappings = (java.util.Map<String, String>) realmMappingsField.get(configWithMapping);
+            realmMappings.put("test-realm", "custom-theme");
+        } catch (Exception e) {
+            fail("Failed to set up test configuration: " + e.getMessage());
+        }
+        
+        // Create provider with the configured mapping
+        Auth41ThemeSelectorProvider providerWithMapping = new Auth41ThemeSelectorProvider(session, configWithMapping);
+        
+        // Call getThemeName which should use the realm mapping
+        String themeName = providerWithMapping.getThemeName(Theme.Type.LOGIN);
+        
+        // Verify the correct theme is returned based on realm mapping
+        assertEquals("custom-theme", themeName, "Should return the theme mapped to test-realm");
     }
 
     @Test
