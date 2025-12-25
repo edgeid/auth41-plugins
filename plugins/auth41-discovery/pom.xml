@@ -6,16 +6,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.apifocal.auth41</groupId>
-        <artifactId>auth41-parent</artifactId>
+        <groupId>org.apifocal.auth41.plugin</groupId>
+        <artifactId>auth41-plugins</artifactId>
         <version>1.0.0-SNAPSHOT</version>
-        <relativePath>../../parent/pom.xml</relativePath>
     </parent>
 
-    <groupId>org.apifocal.auth41.plugin</groupId>
     <artifactId>auth41-discovery</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
-    <packaging>jar</packaging>
 
     <name>Auth41 Discovery Plugin</name>
     <description>Provider discovery service for Auth41 federation - discovers which provider has a user's account</description>

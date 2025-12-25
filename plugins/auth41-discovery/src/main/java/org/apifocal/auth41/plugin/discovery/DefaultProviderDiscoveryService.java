@@ -151,9 +151,11 @@ public class DefaultProviderDiscoveryService implements ProviderDiscoveryService
                 continue;
             }
 
-            // For CIBA, we typically require direct paths or single-hop paths
+            // For CIBA, limit to direct connections (1 hop) or single intermediary (2 hops)
+            // 1 hop = source → target (direct)
+            // 2 hops = source → intermediary → target
             if (path.getHopCount() > 2) {
-                logger.debugf("Trust path from %s to %s has too many hops for CIBA (%d)",
+                logger.debugf("Trust path from %s to %s has too many hops for CIBA (%d), max allowed is 2",
                     currentProvider, providerId, path.getHopCount());
                 continue;
             }

@@ -67,7 +67,9 @@ Main SPI interface for provider discovery operations.
 - Finds user's home provider that supports CIBA
 - Validates CIBA support in provider attributes
 - Checks trust path from current provider to home provider
-- Requires path with ≤2 hops for CIBA compatibility
+- Requires path with ≤2 hops:
+  - 1 hop = direct connection (source → target)
+  - 2 hops = single intermediary (source → intermediary → target)
 - Returns null if no CIBA-capable provider found
 
 **cacheAssociation(String userIdentifier, String providerId, Duration ttl)**
@@ -145,7 +147,9 @@ discovery.clearAllCache();
 1. **Find User's Providers**: Query accounts storage for user's home provider
 2. **Check CIBA Support**: Look for `ciba_supported=true` in provider attributes
 3. **Validate Trust Path**: Compute trust path from current provider to home provider
-4. **Check Hop Count**: Ensure path has ≤2 hops (direct or single intermediary)
+4. **Check Hop Count**: Ensure path has ≤2 hops:
+   - 1 hop = direct connection (current → home)
+   - 2 hops = single intermediary (current → intermediate → home)
 5. **Return Provider**: First provider matching all criteria, or null
 
 ### Configuring CIBA Support
