@@ -103,7 +103,7 @@ public class TrustPath {
     @Override
     public String toString() {
         if (!reachable) {
-            return "TrustPath{" + sourceProvider + " -/→ " + targetProvider + " (unreachable)}";
+            return "TrustPath{" + sourceProvider + " → " + targetProvider + " (unreachable)}";
         }
         return "TrustPath{" + String.join(" → ", path) + "}";
     }

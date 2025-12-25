@@ -79,30 +79,35 @@ public class PeerToPeerTopologyProvider implements TopologyProvider {
 
     /**
      * Use breadth-first search to find the shortest trust path.
+     * Uses parent pointer map for memory efficiency instead of storing full paths.
      */
     private List<String> findShortestPath(TrustNetwork network, String source, String target) {
-        // Queue for BFS: each entry is the current path being explored
-        Queue<List<String>> queue = new LinkedList<>();
+        // Queue for BFS: only store current provider (not entire path)
+        Queue<String> queue = new LinkedList<>();
         Set<String> visited = new HashSet<>();
+        Map<String, String> parentMap = new HashMap<>(); // child -> parent mapping
+        Map<String, Integer> depthMap = new HashMap<>(); // track depth to enforce max path length
 
         // Start with the source provider
-        queue.add(List.of(source));
+        queue.add(source);
         visited.add(source);
+        parentMap.put(source, null); // source has no parent
+        depthMap.put(source, 0);
 
         while (!queue.isEmpty()) {
-            List<String> currentPath = queue.poll();
-            String currentProvider = currentPath.get(currentPath.size() - 1);
+            String currentProvider = queue.poll();
+            int currentDepth = depthMap.get(currentProvider);
 
             // Prevent infinite loops
-            if (currentPath.size() > MAX_PATH_LENGTH) {
+            if (currentDepth >= MAX_PATH_LENGTH) {
                 logger.warnf("Path length exceeded maximum (%d) while searching from %s to %s",
                     MAX_PATH_LENGTH, source, target);
                 continue;
             }
 
-            // Found the target!
+            // Found the target! Reconstruct path from parent pointers
             if (currentProvider.equals(target)) {
-                return currentPath;
+                return reconstructPath(parentMap, target);
             }
 
             // Explore neighbors (providers that current provider trusts)
@@ -112,9 +117,9 @@ public class PeerToPeerTopologyProvider implements TopologyProvider {
 
                     if (!visited.contains(neighbor)) {
                         visited.add(neighbor);
-                        List<String> newPath = new ArrayList<>(currentPath);
-                        newPath.add(neighbor);
-                        queue.add(newPath);
+                        parentMap.put(neighbor, currentProvider);
+                        depthMap.put(neighbor, currentDepth + 1);
+                        queue.add(neighbor);
                     }
                 }
             }
@@ -122,6 +127,24 @@ public class PeerToPeerTopologyProvider implements TopologyProvider {
 
         // No path found
         return null;
+    }
+
+    /**
+     * Reconstruct path from parent pointer map by walking backwards from target to source.
+     */
+    private List<String> reconstructPath(Map<String, String> parentMap, String target) {
+        List<String> path = new ArrayList<>();
+        String current = target;
+
+        // Walk backwards from target to source
+        while (current != null) {
+            path.add(current);
+            current = parentMap.get(current);
+        }
+
+        // Reverse to get source -> target order
+        Collections.reverse(path);
+        return path;
     }
 
     @Override
@@ -132,59 +155,14 @@ public class PeerToPeerTopologyProvider implements TopologyProvider {
 
         // Peer-to-peer has minimal constraints:
         // - All providers should have role "peer" (optional, not enforced)
-        // - Network should not have cycles that could cause issues (we handle this with MAX_PATH_LENGTH)
+        // - Cycles are allowed and handled via MAX_PATH_LENGTH in path computation
 
-        // Check for cycles (optional validation)
-        boolean hasCycles = detectCycles(network);
-        if (hasCycles) {
-            logger.infof("Peer-to-peer network contains cycles (this is allowed but may impact performance)");
-        }
+        // Note: Cycle detection is intentionally NOT performed here for performance reasons.
+        // Cycles are valid in peer-to-peer networks and are handled during path computation
+        // via the MAX_PATH_LENGTH check and visited set tracking. If cycle information is
+        // needed, it can be computed separately on-demand.
 
         return true;
-    }
-
-    /**
-     * Detect if the network contains any cycles.
-     * This is informational only - cycles are allowed in peer-to-peer networks.
-     */
-    private boolean detectCycles(TrustNetwork network) {
-        Set<String> visited = new HashSet<>();
-        Set<String> recursionStack = new HashSet<>();
-
-        for (String providerId : network.getProviders().keySet()) {
-            if (hasCycleDFS(network, providerId, visited, recursionStack)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private boolean hasCycleDFS(TrustNetwork network, String provider,
-                                 Set<String> visited, Set<String> recursionStack) {
-        if (recursionStack.contains(provider)) {
-            return true; // Cycle detected
-        }
-
-        if (visited.contains(provider)) {
-            return false; // Already processed
-        }
-
-        visited.add(provider);
-        recursionStack.add(provider);
-
-        // Check all neighbors
-        for (TrustEdge edge : network.getTrustRelationships()) {
-            if (edge.getFromProvider().equals(provider)) {
-                String neighbor = edge.getToProvider();
-                if (hasCycleDFS(network, neighbor, visited, recursionStack)) {
-                    return true;
-                }
-            }
-        }
-
-        recursionStack.remove(provider);
-        return false;
     }
 
     @Override
