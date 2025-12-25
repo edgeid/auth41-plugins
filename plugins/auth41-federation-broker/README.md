@@ -55,6 +55,24 @@ The Federation Broker is the core component that ties together all Auth41 plugin
 
 ## Components
 
+### Keycloak Authenticator
+
+**FederatedAuthenticator** - Keycloak authentication flow integration
+
+The `FederatedAuthenticator` integrates the federation broker into Keycloak's browser authentication flow. It:
+
+1. **Extracts user identifier** from `login_hint` parameter or displays account chooser
+2. **Discovers home provider** using ProviderDiscoveryService
+3. **Validates trust path** via TopologyProvider
+4. **Redirects to home provider** for authentication
+5. **Handles callback** with authorization code
+6. **Exchanges code for tokens** using FederationBrokerProvider
+7. **Validates tokens** from home provider
+8. **Creates shadow user** in local realm with federation metadata
+9. **Establishes session** for the authenticated user
+
+The authenticator is registered as `auth41-federated` and can be added to any Keycloak authentication flow.
+
 ### Domain Models
 
 **FederationRequest** - Represents a federated authentication request
@@ -354,12 +372,19 @@ Run tests:
 mvn test -pl plugins/auth41-federation-broker
 ```
 
-Test coverage: 14 unit tests covering:
-- Authentication request initiation
-- Token validation (format, issuer, expiration)
-- CIBA request initiation and polling
-- Error handling (provider not found, no trust path, etc.)
-- Domain model builders
+Test coverage: 25 unit tests covering:
+- **FederationBrokerProvider** (14 tests):
+  - Authentication request initiation
+  - Token validation (format, issuer, expiration)
+  - CIBA request initiation and polling
+  - Error handling (provider not found, no trust path, etc.)
+  - Domain model builders
+- **FederatedAuthenticator** (11 tests):
+  - Authentication flow with login_hint
+  - Account chooser fallback
+  - Callback handling and token exchange
+  - Shadow user creation
+  - Error scenarios (user not found, trust path validation, state mismatch, invalid tokens)
 
 ## Integration
 
@@ -391,6 +416,63 @@ Test coverage: 14 unit tests covering:
    ```bash
    $KEYCLOAK_HOME/bin/kc.sh start-dev
    ```
+
+### Configuring the Authenticator in Keycloak
+
+After deploying the plugin, configure the `auth41-federated` authenticator in your realm's browser authentication flow:
+
+#### Option 1: Add to Existing Browser Flow
+
+1. Navigate to **Authentication** → **Flows** in the Keycloak admin console
+2. Select the **browser** flow
+3. Click **Add execution**
+4. Select **Auth41 Federated Authentication** from the provider list
+5. Set the requirement level:
+   - **REQUIRED** - Always use federated authentication
+   - **ALTERNATIVE** - Allow federated OR local authentication
+   - **DISABLED** - Disable federated authentication
+6. Bind the flow to your client or realm
+
+#### Option 2: Create New Federated Flow
+
+1. Navigate to **Authentication** → **Flows**
+2. Click **Create flow**
+3. Name: `Federated Browser Flow`
+4. Flow type: **Basic flow**
+5. Click **Add execution**
+6. Select **Auth41 Federated Authentication**
+7. Set requirement to **REQUIRED**
+8. Bind this flow in **Authentication** → **Bindings** → **Browser Flow**
+
+#### Client-Specific Configuration
+
+To use federated authentication for specific clients only:
+
+1. Navigate to **Clients** → Select client → **Advanced** tab
+2. **Authentication Flow Overrides**:
+   - Browser Flow: `Federated Browser Flow`
+3. Save changes
+
+#### Testing the Authenticator
+
+To test the federated authentication flow:
+
+1. Configure a trust network with at least one federated provider
+2. Register user associations in the discovery service
+3. Navigate to the client's login URL with `login_hint` parameter:
+   ```
+   https://keycloak.example.com/realms/myrealm/protocol/openid-connect/auth?
+     client_id=my-client&
+     response_type=code&
+     scope=openid&
+     redirect_uri=https://myapp.example.com/callback&
+     login_hint=user@federatedprovider.com
+   ```
+4. The authenticator will:
+   - Discover the user's home provider (`federatedprovider.com`)
+   - Validate trust path
+   - Redirect to home provider for authentication
+   - Handle callback and create shadow user
 
 ## Future Enhancements
 
