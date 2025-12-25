@@ -21,5 +21,6 @@
     <modules>
         <module>auth41-themes</module>
         <module>auth41-trust-network</module>
+        <module>auth41-topology</module>
     </modules>
 </project>
