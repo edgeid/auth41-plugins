@@ -22,7 +22,7 @@ A collection of Keycloak plugins for OIDC federation and decentralized identity.
 - ✅ auth41-topology - Topology implementations (25 tests)
 
 **Next to Implement:**
-- ⚠️ auth41-user-records - User record storage and provider associations
+- ⚠️ auth41-accounts - User record storage and provider associations
 
 ## Project Structure
 
@@ -39,7 +39,7 @@ auth41-plugins/
 │   ├── auth41-themes/
 │   ├── auth41-trust-network/
 │   ├── auth41-topology/
-│   └── auth41-user-records/ (next)
+│   └── auth41-accounts/ (next)
 └── pom.xml              # Root aggregator POM
 ```
 
