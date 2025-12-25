@@ -30,7 +30,7 @@ public class AttributesConverter implements AttributeConverter<Map<String, Objec
             return objectMapper.writeValueAsString(attribute);
         } catch (JsonProcessingException e) {
             logger.error("Failed to convert attributes to JSON", e);
-            return "{}";
+            throw new IllegalStateException("Failed to convert attributes to JSON", e);
         }
     }
 
@@ -44,7 +44,7 @@ public class AttributesConverter implements AttributeConverter<Map<String, Objec
             return objectMapper.readValue(dbData, TYPE_REF);
         } catch (JsonProcessingException e) {
             logger.error("Failed to parse JSON attributes: " + dbData, e);
-            return new HashMap<>();
+            throw new IllegalStateException("Failed to parse JSON attributes from database column", e);
         }
     }
 }

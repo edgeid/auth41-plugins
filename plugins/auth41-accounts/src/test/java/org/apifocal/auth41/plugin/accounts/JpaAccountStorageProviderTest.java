@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
 
 @ExtendWith(MockitoExtension.class)
 class JpaAccountStorageProviderTest {
@@ -55,9 +56,6 @@ class JpaAccountStorageProviderTest {
             .homeProviderId("provider-a")
             .build();
 
-        // Simulate account doesn't exist
-        when(em.find(UserAccountEntity.class, "user@example.com")).thenReturn(null);
-
         provider.createAccount(account);
 
         verify(em).persist(any(UserAccountEntity.class));
@@ -71,9 +69,17 @@ class JpaAccountStorageProviderTest {
             .homeProviderId("provider-a")
             .build();
 
-        // Simulate account already exists
-        UserAccountEntity existingEntity = new UserAccountEntity("user@example.com", "provider-a");
-        when(em.find(UserAccountEntity.class, "user@example.com")).thenReturn(existingEntity);
+        // Simulate database constraint violation (primary key duplicate)
+        jakarta.persistence.PersistenceException constraintException =
+            new jakarta.persistence.PersistenceException("could not execute statement",
+                new org.hibernate.exception.ConstraintViolationException(
+                    "could not execute statement",
+                    null,
+                    "unique constraint or index violation: PRIMARY KEY ON PUBLIC.AUTH41_USER_ACCOUNTS(USER_IDENTIFIER)"
+                )
+            );
+
+        doThrow(constraintException).when(em).flush();
 
         assertThatThrownBy(() -> provider.createAccount(account))
             .isInstanceOf(IllegalArgumentException.class)

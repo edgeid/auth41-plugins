@@ -87,7 +87,7 @@ public class UserAccountEntity {
     }
 
     public Map<String, Object> getAttributes() {
-        return attributes;
+        return attributes != null ? java.util.Collections.unmodifiableMap(attributes) : java.util.Collections.emptyMap();
     }
 
     public void setAttributes(Map<String, Object> attributes) {
@@ -127,7 +127,7 @@ public class UserAccountEntity {
             .email(email)
             .name(name)
             .homeProviderId(homeProviderId)
-            .attributes(attributes)
+            .attributes(attributes != null ? new HashMap<>(attributes) : null)
             .createdAt(createdAt)
             .updatedAt(updatedAt)
             .build();

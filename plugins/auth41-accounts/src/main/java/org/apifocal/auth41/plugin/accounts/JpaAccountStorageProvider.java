@@ -35,19 +35,45 @@ public class JpaAccountStorageProvider implements AccountStorageProvider {
             throw new IllegalArgumentException("Account cannot be null");
         }
 
-        // Check if account already exists
-        if (accountExists(account.getUserIdentifier())) {
-            throw new IllegalArgumentException(
-                "Account already exists: " + account.getUserIdentifier()
-            );
+        try {
+            UserAccountEntity entity = UserAccountEntity.fromUserAccount(account);
+            em.persist(entity);
+            em.flush();
+
+            logger.debugf("Created account: %s at provider %s",
+                account.getUserIdentifier(), account.getHomeProviderId());
+        } catch (jakarta.persistence.PersistenceException e) {
+            // Check if this is a constraint violation (duplicate key)
+            Throwable current = e;
+            while (current != null) {
+                String message = current.getMessage();
+                String className = current.getClass().getName();
+
+                // Check exception class name
+                if (className.contains("ConstraintViolationException")) {
+                    throw new IllegalArgumentException(
+                        "Account already exists: " + account.getUserIdentifier(), e
+                    );
+                }
+
+                // Check message content
+                if (message != null) {
+                    String lowerMessage = message.toLowerCase();
+                    if (lowerMessage.contains("constraint") ||
+                        lowerMessage.contains("unique") ||
+                        lowerMessage.contains("duplicate") ||
+                        lowerMessage.contains("primary key")) {
+                        throw new IllegalArgumentException(
+                            "Account already exists: " + account.getUserIdentifier(), e
+                        );
+                    }
+                }
+
+                current = current.getCause();
+            }
+            // Re-throw if not a constraint violation
+            throw e;
         }
-
-        UserAccountEntity entity = UserAccountEntity.fromUserAccount(account);
-        em.persist(entity);
-        em.flush();
-
-        logger.debugf("Created account: %s at provider %s",
-            account.getUserIdentifier(), account.getHomeProviderId());
     }
 
     @Override
@@ -96,7 +122,8 @@ public class JpaAccountStorageProvider implements AccountStorageProvider {
         entity.setEmail(account.getEmail());
         entity.setName(account.getName());
         entity.setHomeProviderId(account.getHomeProviderId());
-        entity.setAttributes(account.getAttributes());
+        // Create mutable copy of attributes for JPA change tracking
+        entity.setAttributes(new java.util.HashMap<>(account.getAttributes()));
         // updatedAt is set automatically via @PreUpdate
 
         em.merge(entity);
