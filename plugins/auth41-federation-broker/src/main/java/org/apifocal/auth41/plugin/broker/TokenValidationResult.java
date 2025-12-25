@@ -45,7 +45,7 @@ public class TokenValidationResult {
     }
 
     public Map<String, Object> getClaims() {
-        return Collections.unmodifiableMap(new HashMap<>(claims));
+        return claims;
     }
 
     public String getErrorMessage() {

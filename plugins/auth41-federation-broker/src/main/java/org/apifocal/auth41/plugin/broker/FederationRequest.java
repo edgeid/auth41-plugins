@@ -68,7 +68,7 @@ public class FederationRequest {
     }
 
     public Map<String, String> getAdditionalParams() {
-        return Collections.unmodifiableMap(new HashMap<>(additionalParams));
+        return additionalParams;
     }
 
     public static Builder builder() {

@@ -34,15 +34,24 @@ import java.util.Map;
 public class DefaultFederationBrokerProvider implements FederationBrokerProvider {
 
     private static final Logger logger = Logger.getLogger(DefaultFederationBrokerProvider.class);
+    private static final int HTTP_CONNECT_TIMEOUT_SECONDS = 10;
+    private static final int HTTP_REQUEST_TIMEOUT_SECONDS = 30;
+    private static final String DEFAULT_BROKER_CLIENT_ID = "federation-broker";
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final HttpClient httpClient = HttpClient.newBuilder()
-        .connectTimeout(Duration.ofSeconds(10))
+        .connectTimeout(Duration.ofSeconds(HTTP_CONNECT_TIMEOUT_SECONDS))
         .build();
 
     private final KeycloakSession session;
+    private final String brokerClientId;
 
     public DefaultFederationBrokerProvider(KeycloakSession session) {
+        this(session, DEFAULT_BROKER_CLIENT_ID);
+    }
+
+    public DefaultFederationBrokerProvider(KeycloakSession session, String brokerClientId) {
         this.session = session;
+        this.brokerClientId = brokerClientId != null ? brokerClientId : DEFAULT_BROKER_CLIENT_ID;
     }
 
     @Override
@@ -108,7 +117,7 @@ public class DefaultFederationBrokerProvider implements FederationBrokerProvider
             params.put("grant_type", "authorization_code");
             params.put("code", code);
             // Note: In production, client_id and redirect_uri would come from session state
-            params.put("client_id", "federation-broker");
+            params.put("client_id", brokerClientId);
 
             String formData = buildFormData(params);
 
@@ -288,7 +297,11 @@ public class DefaultFederationBrokerProvider implements FederationBrokerProvider
             }
 
             JsonNode responseJson = objectMapper.readTree(response.body());
-            return responseJson.get("auth_req_id").asText();
+                        JsonNode authReqIdNode = responseJson.get("auth_req_id");
+            if (authReqIdNode == null || authReqIdNode.isNull()) {
+                throw new FederationException("CIBA response missing required 'auth_req_id' field. Body: " + response.body());
+            }
+            return authReqIdNode.asText();
 
         } catch (IOException | InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -320,7 +333,7 @@ public class DefaultFederationBrokerProvider implements FederationBrokerProvider
             Map<String, String> params = new HashMap<>();
             params.put("grant_type", "urn:openid:params:grant-type:ciba");
             params.put("auth_req_id", authReqId);
-            params.put("client_id", "federation-broker");
+            params.put("client_id", brokerClientId);
 
             String formData = buildFormData(params);
 
@@ -337,7 +350,8 @@ public class DefaultFederationBrokerProvider implements FederationBrokerProvider
             if (response.statusCode() == 400) {
                 // Check if authorization is still pending
                 JsonNode error = objectMapper.readTree(response.body());
-                if ("authorization_pending".equals(error.get("error").asText())) {
+                JsonNode errorNode = error != null ? error.get("error") : null;
+                if (errorNode != null && "authorization_pending".equals(errorNode.asText())) {
                     return null; // Still pending
                 }
             }

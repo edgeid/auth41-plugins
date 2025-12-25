@@ -230,6 +230,20 @@ These federation claims allow RPs to:
 
 ## Configuration
 
+### Broker Client ID
+
+By default, the federation broker uses `"federation-broker"` as its client ID when communicating with federated providers. This can be customized via Keycloak configuration:
+
+```bash
+kc.sh start --spi-federation-broker-default-broker-client-id=custom-broker-id
+```
+
+This client ID is used when:
+- Exchanging authorization codes for tokens
+- Polling for CIBA token completion
+
+**Note**: The broker client ID must be registered at all federated providers in the trust network.
+
 ### Trust Network Setup
 
 The federation broker requires a properly configured trust network with provider metadata:
