@@ -14,6 +14,8 @@ public class ProviderMetadata {
     private final String userinfoEndpoint;
     private final String organization;
     private final String technicalContact;
+    private final String backchannelAuthenticationEndpoint;
+    private final String backchannelAuthenticationCallbackEndpoint;
 
     // Default constructor for backward compatibility (creates empty metadata)
     public ProviderMetadata() {
@@ -27,6 +29,8 @@ public class ProviderMetadata {
         this.userinfoEndpoint = builder.userinfoEndpoint;
         this.organization = builder.organization;
         this.technicalContact = builder.technicalContact;
+        this.backchannelAuthenticationEndpoint = builder.backchannelAuthenticationEndpoint;
+        this.backchannelAuthenticationCallbackEndpoint = builder.backchannelAuthenticationCallbackEndpoint;
     }
 
     public String getAuthorizationEndpoint() {
@@ -53,6 +57,14 @@ public class ProviderMetadata {
         return technicalContact;
     }
 
+    public String getBackchannelAuthenticationEndpoint() {
+        return backchannelAuthenticationEndpoint;
+    }
+
+    public String getBackchannelAuthenticationCallbackEndpoint() {
+        return backchannelAuthenticationCallbackEndpoint;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -64,6 +76,8 @@ public class ProviderMetadata {
         private String userinfoEndpoint;
         private String organization;
         private String technicalContact;
+        private String backchannelAuthenticationEndpoint;
+        private String backchannelAuthenticationCallbackEndpoint;
 
         public Builder authorizationEndpoint(String authorizationEndpoint) {
             this.authorizationEndpoint = authorizationEndpoint;
@@ -92,6 +106,16 @@ public class ProviderMetadata {
 
         public Builder technicalContact(String technicalContact) {
             this.technicalContact = technicalContact;
+            return this;
+        }
+
+        public Builder backchannelAuthenticationEndpoint(String backchannelAuthenticationEndpoint) {
+            this.backchannelAuthenticationEndpoint = backchannelAuthenticationEndpoint;
+            return this;
+        }
+
+        public Builder backchannelAuthenticationCallbackEndpoint(String backchannelAuthenticationCallbackEndpoint) {
+            this.backchannelAuthenticationCallbackEndpoint = backchannelAuthenticationCallbackEndpoint;
             return this;
         }
 
