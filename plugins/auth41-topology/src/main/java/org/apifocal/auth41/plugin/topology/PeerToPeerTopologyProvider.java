@@ -79,9 +79,12 @@ public class PeerToPeerTopologyProvider implements TopologyProvider {
 
     /**
      * Use breadth-first search to find the shortest trust path.
-     * Uses parent pointer map for memory efficiency instead of storing full paths.
+     * Uses parent pointer map for memory efficiency and adjacency list for O(V+E) complexity.
      */
     private List<String> findShortestPath(TrustNetwork network, String source, String target) {
+        // Build adjacency list once for O(E) instead of O(V*E)
+        Map<String, List<String>> adjacencyList = buildAdjacencyList(network);
+
         // Queue for BFS: only store current provider (not entire path)
         Queue<String> queue = new LinkedList<>();
         Set<String> visited = new HashSet<>();
@@ -110,23 +113,39 @@ public class PeerToPeerTopologyProvider implements TopologyProvider {
                 return reconstructPath(parentMap, target);
             }
 
-            // Explore neighbors (providers that current provider trusts)
-            for (TrustEdge edge : network.getTrustRelationships()) {
-                if (edge.getFromProvider().equals(currentProvider)) {
-                    String neighbor = edge.getToProvider();
-
-                    if (!visited.contains(neighbor)) {
-                        visited.add(neighbor);
-                        parentMap.put(neighbor, currentProvider);
-                        depthMap.put(neighbor, currentDepth + 1);
-                        queue.add(neighbor);
-                    }
+            // Explore neighbors using adjacency list (O(1) lookup)
+            List<String> neighbors = adjacencyList.getOrDefault(currentProvider, Collections.emptyList());
+            for (String neighbor : neighbors) {
+                if (!visited.contains(neighbor)) {
+                    visited.add(neighbor);
+                    parentMap.put(neighbor, currentProvider);
+                    depthMap.put(neighbor, currentDepth + 1);
+                    queue.add(neighbor);
                 }
             }
         }
 
         // No path found
         return null;
+    }
+
+    /**
+     * Build adjacency list from trust relationships for O(E) preprocessing.
+     * This allows O(1) neighbor lookup during BFS instead of O(E) per node.
+     *
+     * @return Map of provider ID to list of neighbors (providers they trust)
+     */
+    private Map<String, List<String>> buildAdjacencyList(TrustNetwork network) {
+        Map<String, List<String>> adjacencyList = new HashMap<>();
+
+        for (TrustEdge edge : network.getTrustRelationships()) {
+            String from = edge.getFromProvider();
+            String to = edge.getToProvider();
+
+            adjacencyList.computeIfAbsent(from, k -> new ArrayList<>()).add(to);
+        }
+
+        return adjacencyList;
     }
 
     /**
