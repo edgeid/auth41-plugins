@@ -19,9 +19,10 @@
     <description>Parent POM for Auth41 Keycloak plugins</description>
 
     <modules>
-        <module>auth41-themes</module>
-        <module>auth41-trust-network</module>
-        <module>auth41-topology</module>
         <module>auth41-accounts</module>
+        <module>auth41-discovery</module>
+        <module>auth41-themes</module>
+        <module>auth41-topology</module>
+        <module>auth41-trust-network</module>
     </modules>
 </project>
