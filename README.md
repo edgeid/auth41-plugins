@@ -1,14 +1,45 @@
 # Auth41 Keycloak Plugins
 
-A collection of Keycloak plugins for Auth41.
+A collection of Keycloak plugins for OIDC federation and decentralized identity.
+
+## Documentation
+
+📋 **[Project Plan](.plan/PLAN.md)** - Project overview, status, and quick reference
+
+📐 **[Architecture](.plan/ARCHITECTURE.md)** - High-level design, flows, and decisions
+
+🔨 **[Implementation Roadmap](.plan/IMPLEMENTATION.md)** - Detailed plugin specifications and timeline
+
+🔐 **[CIBA Integration](.plan/CIBA.md)** - Client Initiated Backchannel Authentication plan
+
+📝 **[Session Summary](.plan/SESSION_SUMMARY.md)** - Development history and milestones
+
+## Current Status
+
+**Completed Plugins (3/7 core plugins):**
+- ✅ auth41-themes - Dynamic theme selection (52 tests)
+- ✅ auth41-trust-network - Trust network management (41 tests)
+- ✅ auth41-topology - Topology implementations (25 tests)
+
+**Next to Implement:**
+- ⚠️ auth41-user-records - User record storage and provider associations
 
 ## Project Structure
 
 ```
 auth41-plugins/
+├── .plan/               # Project documentation
+│   ├── PLAN.md         # Project overview and index
+│   ├── ARCHITECTURE.md # High-level architecture
+│   ├── IMPLEMENTATION.md # Implementation roadmap
+│   ├── CIBA.md         # CIBA integration plan
+│   └── SESSION_SUMMARY.md # Development history
 ├── parent/              # Parent POM with dependency management
 ├── plugins/             # Plugin modules
-│   └── auth41-example/  # Example plugin structure
+│   ├── auth41-themes/
+│   ├── auth41-trust-network/
+│   ├── auth41-topology/
+│   └── auth41-user-records/ (next)
 └── pom.xml              # Root aggregator POM
 ```
 
