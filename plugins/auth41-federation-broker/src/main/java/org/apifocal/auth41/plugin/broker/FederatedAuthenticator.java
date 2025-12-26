@@ -105,6 +105,11 @@ public class FederatedAuthenticator implements Authenticator {
             context.failure(AuthenticationFlowError.UNKNOWN_USER);
             return;
         }
+        if (providers.size() > 1) {
+            logger.warnf("Multiple home providers found for user %s: %s", loginHint, String.join(", ", providers));
+            context.failure(AuthenticationFlowError.INVALID_USER);
+            return;
+        }
 
         String homeProviderId = providers.iterator().next();
         logger.infof("Discovered home provider: %s", homeProviderId);
@@ -200,7 +205,22 @@ public class FederatedAuthenticator implements Authenticator {
             return;
         }
 
-        // 4. Get home provider ID from session
+        // 4. Validate redirect URI (ensure callback came to expected URI)
+        String currentUri = context.getHttpRequest().getUri().getRequestUri().toString();
+        String expectedRedirectUri = context.getAuthenticationSession().getAuthNote(AUTH_NOTE_REDIRECT_URI);
+
+        if (expectedRedirectUri != null) {
+            // Extract base URI without query parameters for comparison
+            String currentBaseUri = currentUri.split("\\?")[0];
+            if (!expectedRedirectUri.equals(currentBaseUri)) {
+                logger.warnf("Redirect URI mismatch - expected: %s, got: %s",
+                    expectedRedirectUri, currentBaseUri);
+                context.failure(AuthenticationFlowError.INVALID_CREDENTIALS);
+                return;
+            }
+        }
+
+        // 5. Get home provider ID from session
         String homeProviderId = context.getAuthenticationSession().getAuthNote(AUTH_NOTE_HOME_PROVIDER);
         if (homeProviderId == null) {
             logger.error("Home provider ID not found in session");
@@ -208,7 +228,7 @@ public class FederatedAuthenticator implements Authenticator {
             return;
         }
 
-        // 5. Load trust network
+        // 6. Load trust network
         TrustNetworkProvider trustProvider = context.getSession().getProvider(TrustNetworkProvider.class);
         TrustNetwork network;
         try {
@@ -219,8 +239,14 @@ public class FederatedAuthenticator implements Authenticator {
             return;
         }
 
-        // 6. Exchange code for token
+        // 7. Exchange code for token
         FederationBrokerProvider broker = context.getSession().getProvider(FederationBrokerProvider.class);
+        if (broker == null) {
+            logger.error("FederationBrokerProvider not available");
+            context.failure(AuthenticationFlowError.INTERNAL_ERROR);
+            return;
+        }
+
         TokenSet tokens;
         try {
             tokens = broker.exchangeCodeForToken(code, homeProviderId, network);
@@ -231,7 +257,7 @@ public class FederatedAuthenticator implements Authenticator {
             return;
         }
 
-        // 7. Validate ID token
+        // 8. Validate ID token
         TokenValidationResult validation;
         try {
             validation = broker.validateToken(tokens.getIdToken(), homeProviderId, network);
@@ -247,7 +273,7 @@ public class FederatedAuthenticator implements Authenticator {
             return;
         }
 
-        // 8. Create or update shadow user
+        // 9. Create or update shadow user
         UserModel user;
         try {
             user = getOrCreateShadowUser(context, homeProviderId, validation);
@@ -258,7 +284,7 @@ public class FederatedAuthenticator implements Authenticator {
             return;
         }
 
-        // 9. Set user and complete authentication
+        // 10. Set user and complete authentication
         context.setUser(user);
         context.success();
     }
@@ -318,11 +344,11 @@ public class FederatedAuthenticator implements Authenticator {
         // Extract claims from validated token
         String subject = validation.getSubject();
         String email = getClaimAsString(validation, "email");
-        String username = email != null ? email : subject;
         String firstName = getClaimAsString(validation, "given_name");
         String lastName = getClaimAsString(validation, "family_name");
 
         // Create federated user identifier: homeProvider:subject
+        // This is used as the Keycloak username to ensure uniqueness across providers
         String federatedUserId = homeProviderId + ":" + subject;
 
         // Look for existing user by federated identifier
@@ -334,7 +360,10 @@ public class FederatedAuthenticator implements Authenticator {
             logger.infof("Creating new shadow user: %s", federatedUserId);
             user = userProvider.addUser(realm, federatedUserId);
             user.setEnabled(true);
-            user.setEmailVerified(true);
+
+            String emailVerifiedClaim = getClaimAsString(validation, "email_verified");
+            boolean emailVerified = emailVerifiedClaim != null && Boolean.parseBoolean(emailVerifiedClaim);
+            user.setEmailVerified(emailVerified);
         } else {
             logger.infof("Found existing shadow user: %s", federatedUserId);
         }

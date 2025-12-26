@@ -10,7 +10,7 @@
                         <label for="login_hint" class="${properties.kcLabelClass!}">${msg("usernameOrEmail")}</label>
 
                         <input tabindex="1" id="login_hint" class="${properties.kcInputClass!}" name="login_hint"
-                               value="${(login.username!'')}" type="text" autofocus autocomplete="off"
+                               value="${(login.username!'')}" type="text" autofocus autocomplete="username"
                                aria-invalid="<#if messagesPerField.existsError('username')>true</#if>"
                         />
 

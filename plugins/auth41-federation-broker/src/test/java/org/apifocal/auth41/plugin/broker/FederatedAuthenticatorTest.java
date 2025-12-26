@@ -243,9 +243,11 @@ class FederatedAuthenticatorTest {
 
         when(httpRequest.getUri()).thenReturn(uriInfo);
         when(uriInfo.getQueryParameters()).thenReturn(queryParams);
+        when(uriInfo.getRequestUri()).thenReturn(URI.create("https://hub-a.example.com/realms/hub-a/broker/auth41-federated/endpoint"));
 
         when(authSession.getAuthNote("federation_state")).thenReturn(state);
         when(authSession.getAuthNote("home_provider_id")).thenReturn("provider-a");
+        when(authSession.getAuthNote("federation_redirect_uri")).thenReturn("https://hub-a.example.com/realms/hub-a/broker/auth41-federated/endpoint");
 
         TokenSet tokens = TokenSet.builder()
             .accessToken("access_token")
@@ -320,6 +322,31 @@ class FederatedAuthenticatorTest {
     }
 
     @Test
+    void testActionRedirectUriMismatch() throws FederationException {
+        // Arrange
+        String code = "auth_code_123";
+        String state = "state_123";
+
+        MultivaluedMap<String, String> queryParams = new MultivaluedHashMap<>();
+        queryParams.putSingle("code", code);
+        queryParams.putSingle("state", state);
+
+        when(httpRequest.getUri()).thenReturn(uriInfo);
+        when(uriInfo.getQueryParameters()).thenReturn(queryParams);
+        when(uriInfo.getRequestUri()).thenReturn(URI.create("https://hub-a.example.com/realms/hub-a/broker/auth41-federated/endpoint?code=auth_code_123&state=state_123"));
+
+        when(authSession.getAuthNote("federation_state")).thenReturn(state);
+        when(authSession.getAuthNote("federation_redirect_uri")).thenReturn("https://different-uri.example.com/callback");
+
+        // Act
+        authenticator.action(context);
+
+        // Assert
+        verify(context).failure(AuthenticationFlowError.INVALID_CREDENTIALS);
+        verify(broker, never()).exchangeCodeForToken(anyString(), anyString(), any());
+    }
+
+    @Test
     void testActionInvalidToken() throws FederationException {
         // Arrange
         String code = "auth_code_123";
@@ -331,9 +358,11 @@ class FederatedAuthenticatorTest {
 
         when(httpRequest.getUri()).thenReturn(uriInfo);
         when(uriInfo.getQueryParameters()).thenReturn(queryParams);
+        when(uriInfo.getRequestUri()).thenReturn(URI.create("https://hub-a.example.com/realms/hub-a/broker/auth41-federated/endpoint"));
 
         when(authSession.getAuthNote("federation_state")).thenReturn(state);
         when(authSession.getAuthNote("home_provider_id")).thenReturn("provider-a");
+        when(authSession.getAuthNote("federation_redirect_uri")).thenReturn("https://hub-a.example.com/realms/hub-a/broker/auth41-federated/endpoint");
 
         TokenSet tokens = TokenSet.builder()
             .accessToken("access_token")
