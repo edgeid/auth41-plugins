@@ -1,120 +1,258 @@
 # Auth41 Keycloak Plugins
 
-A collection of Keycloak plugins for OIDC federation and decentralized identity.
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
+[![Keycloak](https://img.shields.io/badge/Keycloak-23.x-blue.svg)](https://www.keycloak.org/)
 
-## Documentation
+A collection of Keycloak plugins that enable federated authentication across multiple identity providers using a trust network model.
 
-📋 **[Project Plan](.plan/PLAN.md)** - Project overview, status, and quick reference
+## Overview
 
-📐 **[Architecture](.plan/ARCHITECTURE.md)** - High-level design, flows, and decisions
+Auth41 extends Keycloak with capabilities for multi-organization federation, allowing users to authenticate at their home identity provider while accessing services at other trusted providers. The system supports various network topologies (hub-and-spoke, mesh) and handles automatic provider discovery, trust path validation, and federated user provisioning.
 
-🔨 **[Implementation Roadmap](.plan/IMPLEMENTATION.md)** - Detailed plugin specifications and timeline
+### Key Features
 
-🔐 **[CIBA Integration](.plan/CIBA.md)** - Client Initiated Backchannel Authentication plan
+- **🌐 Trust Network Management** - Define and manage explicit trust relationships between identity providers
+- **🔍 Automatic Provider Discovery** - Discover user home providers based on email domain or identifier
+- **🗺️ Topology Support** - Hub-and-spoke, mesh, and custom network topologies with trust path computation
+- **🔐 Federation Broker** - Transparent authentication redirection to home providers
+- **👤 Shadow Account Management** - Automatic federated user provisioning and synchronization
+- **🎨 Dynamic Theming** - Realm, client, and user-based theme selection
 
-📝 **[Session Summary](.plan/SESSION_SUMMARY.md)** - Development history and milestones
+## Architecture
 
-## Current Status
-
-**Completed Plugins (3/7 core plugins):**
-- ✅ auth41-themes - Dynamic theme selection (52 tests)
-- ✅ auth41-trust-network - Trust network management (41 tests)
-- ✅ auth41-topology - Topology implementations (25 tests)
-
-**Next to Implement:**
-- ⚠️ auth41-accounts - User record storage and provider associations
-
-## Project Structure
+Auth41 consists of six integrated plugins:
 
 ```
-auth41-plugins/
-├── .plan/               # Project documentation
-│   ├── PLAN.md         # Project overview and index
-│   ├── ARCHITECTURE.md # High-level architecture
-│   ├── IMPLEMENTATION.md # Implementation roadmap
-│   ├── CIBA.md         # CIBA integration plan
-│   └── SESSION_SUMMARY.md # Development history
-├── parent/              # Parent POM with dependency management
-├── plugins/             # Plugin modules
-│   ├── auth41-themes/
-│   ├── auth41-trust-network/
-│   ├── auth41-topology/
-│   └── auth41-accounts/ (next)
-└── pom.xml              # Root aggregator POM
+┌─────────────────────────────────────────────────────────────┐
+│                     Auth41 Federation                        │
+├─────────────────────────────────────────────────────────────┤
+│  Trust Network  │  Topology  │  Discovery  │  Accounts      │
+│  Configuration  │  Provider  │  Service    │  Management    │
+├─────────────────────────────────────────────────────────────┤
+│         Federation Broker    │    Theme Selector            │
+│         (Authenticator)      │    (Theme Provider)          │
+└─────────────────────────────────────────────────────────────┘
+                            │
+                    ┌───────┴───────┐
+                    │   Keycloak    │
+                    │   SPI Layer   │
+                    └───────────────┘
 ```
 
-## Building
+See [Architecture Documentation](docs/architecture.md) for details.
 
-Build the entire project:
-
-```bash
-mvn clean install
-```
-
-Build a specific plugin:
-
-```bash
-cd plugins/auth41-example
-mvn clean install
-```
-
-## Releasing
-
-This project is configured to publish to Maven Central via Sonatype OSSRH.
+## Quick Start
 
 ### Prerequisites
 
-1. Configure your `~/.m2/settings.xml` with Sonatype credentials:
+- Keycloak 23.x or later
+- Java 17+
+- Maven 3.8+ (for building from source)
 
-```xml
-<settings>
-  <servers>
-    <server>
-      <id>ossrh</id>
-      <username>your-jira-id</username>
-      <password>your-jira-password</password>
-    </server>
-  </servers>
-</settings>
-```
+### Installation
 
-2. Set up GPG for signing artifacts:
+1. **Build the plugins**:
 
 ```bash
-gpg --gen-key
-gpg --list-keys
+git clone https://github.com/apifocal/auth41-plugins.git
+cd auth41-plugins
+mvn clean install
 ```
 
-### Release Process
-
-Build and deploy a snapshot:
+2. **Deploy to Keycloak**:
 
 ```bash
-mvn clean deploy
+# Copy plugin JARs to Keycloak providers directory
+cp plugins/*/target/*.jar $KEYCLOAK_HOME/providers/
+
+# Rebuild Keycloak
+$KEYCLOAK_HOME/bin/kc.sh build
 ```
 
-Build and stage a release:
+3. **Restart Keycloak**:
 
 ```bash
-mvn clean deploy -P release
+$KEYCLOAK_HOME/bin/kc.sh start-dev
 ```
 
-## Plugin Development
+4. **Verify installation**:
 
-Each plugin should:
+Check Keycloak logs for Auth41 plugin loading messages.
 
-1. Be located in `plugins/auth41-{name}/`
-2. Have `artifactId` of `auth41-{name}`
-3. Have `groupId` of `org.apifocal.auth41.plugin`
-4. Inherit from `auth41-parent`
-5. Include a `META-INF/services` file for Keycloak SPI discovery
+See [Installation Guide](docs/installation.md) for detailed instructions.
 
-## Requirements
+### Basic Configuration
 
-- Java 17 or later
-- Maven 3.6 or later
-- Keycloak 23.x
+Create a trust network configuration file (`trust-network.json`):
+
+```json
+{
+  "network_id": "my-federation",
+  "topology_type": "hub-and-spoke",
+  "providers": {
+    "hub": {
+      "provider_id": "hub",
+      "issuer": "https://hub.example.com/realms/main",
+      "role": "hub"
+    },
+    "org-a": {
+      "provider_id": "org-a",
+      "issuer": "https://org-a.example.com/realms/main",
+      "role": "spoke"
+    }
+  },
+  "trust_relationships": [
+    {"from": "hub", "to": "org-a", "trust_level": "EXPLICIT"},
+    {"from": "org-a", "to": "hub", "trust_level": "EXPLICIT"}
+  ]
+}
+```
+
+Configure Keycloak to load the trust network:
+
+```bash
+export AUTH41_TRUST_NETWORK_PATH=/path/to/trust-network.json
+$KEYCLOAK_HOME/bin/kc.sh start
+```
+
+See [Configuration Guide](docs/configuration.md) for complete setup.
+
+## Plugins
+
+### Core Federation Plugins
+
+| Plugin | Description | Documentation |
+|--------|-------------|---------------|
+| **Trust Network** | Manages trust relationships between providers | [📖 Docs](docs/plugins/trust-network.md) |
+| **Topology** | Computes trust paths in various network topologies | [📖 Docs](docs/plugins/topology.md) |
+| **Discovery** | Discovers user home providers | [📖 Docs](docs/plugins/discovery.md) |
+| **Accounts** | Manages federated user accounts | [📖 Docs](docs/plugins/accounts.md) |
+| **Federation Broker** | Authenticator for federated login flows | [📖 Docs](docs/plugins/federation-broker.md) |
+
+### UI Enhancement Plugins
+
+| Plugin | Description | Documentation |
+|--------|-------------|---------------|
+| **Themes** | Dynamic theme selection based on context | [📖 Docs](docs/plugins/themes.md) |
+
+## Use Cases
+
+### Multi-Organization Federation
+
+Organizations A, B, and C want to allow their users to access each other's services while authenticating at their home organization:
+
+```
+Organization A (Hub)
+    ↕ Trust
+Organization B (Spoke) ←→ Organization C (Spoke)
+```
+
+Users from Organization B accessing services at Organization A are automatically redirected to Organization B for authentication, then returned to Organization A with a federated identity.
+
+### Educational Federation
+
+Universities in a consortium share access to research resources:
+
+```
+        Consortium Hub
+           ↙  ↓  ↘
+    Univ-A Univ-B Univ-C
+```
+
+Students authenticate at their home university but can access resources at any consortium member.
+
+See [Examples](docs/examples/) for detailed scenarios.
+
+## Documentation
+
+- [📘 Full Documentation](docs/README.md)
+- [🚀 Installation Guide](docs/installation.md)
+- [⚙️ Configuration Guide](docs/configuration.md)
+- [🏗️ Architecture Overview](docs/architecture.md)
+- [🔧 Troubleshooting](docs/troubleshooting.md)
+- [💻 Development Guide](docs/development.md)
+
+## Development
+
+### Building from Source
+
+```bash
+# Clone repository
+git clone https://github.com/apifocal/auth41-plugins.git
+cd auth41-plugins
+
+# Build all plugins
+mvn clean install
+
+# Build specific plugin
+mvn clean install -pl plugins/auth41-trust-network
+
+# Skip tests
+mvn clean install -DskipTests
+```
+
+### Running Tests
+
+```bash
+# Run all tests
+mvn test
+
+# Run tests for specific plugin
+mvn test -pl plugins/auth41-federation-broker
+
+# Run with coverage
+mvn clean verify
+```
+
+### Project Structure
+
+```
+auth41-plugins/
+├── parent/                  # Parent POM with dependency management
+├── plugins/                 # Plugin modules
+│   ├── auth41-trust-network/
+│   ├── auth41-topology/
+│   ├── auth41-discovery/
+│   ├── auth41-accounts/
+│   ├── auth41-federation-broker/
+│   └── auth41-themes/
+├── test/                    # Integration tests (manual for now)
+└── docs/                    # Documentation
+```
+
+## Contributing
+
+Contributions are welcome! Please see [Development Guide](docs/development.md) for:
+
+- Code style guidelines
+- Testing requirements
+- Pull request process
+- Issue reporting
+
+## Roadmap
+
+- [ ] CIBA (Client-Initiated Backchannel Authentication) support
+- [ ] Mock-based integration testing framework
+- [ ] Admin UI extensions for trust network management
+- [ ] Metrics and monitoring integration
+- [ ] Performance optimizations
+- [ ] Additional topology types (full mesh, hierarchical)
 
 ## License
 
-Apache License 2.0
+Apache License 2.0 - See [LICENSE](LICENSE) file for details.
+
+## Support
+
+- 📧 Email: [hadrian@apache.org](mailto:hadrian@apache.org)
+- 🐛 Issues: [GitHub Issues](https://github.com/apifocal/auth41-plugins/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/apifocal/auth41-plugins/discussions)
+
+## Acknowledgments
+
+Built on [Keycloak](https://www.keycloak.org/), the open-source identity and access management solution.
+
+---
+
+**Made with ❤️ for federated authentication**
