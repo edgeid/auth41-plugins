@@ -131,6 +131,14 @@ See [Configuration Guide](docs/configuration.md) for complete setup.
 | **Accounts** | Manages federated user accounts | [📖 Docs](docs/plugins/accounts.md) |
 | **Federation Broker** | Authenticator for federated login flows | [📖 Docs](docs/plugins/federation-broker.md) |
 
+### Authentication Enhancement Plugins
+
+| Plugin | Description | Documentation |
+|--------|-------------|---------------|
+| **CIBA** | Client-Initiated Backchannel Authentication for decoupled flows | [📖 Docs](docs/plugins/ciba.md) |
+| **Backchannel (File)** | File-based backchannel for manual/integration testing | [📖 Docs](plugins/auth41-backchannel-file/README.md) |
+| **Backchannel (Mock)** | Mock backchannel for automated testing | [📖 Docs](plugins/auth41-backchannel-mock/README.md) |
+
 ### UI Enhancement Plugins
 
 | Plugin | Description | Documentation |
@@ -223,7 +231,8 @@ auth41-plugins/
 │   ├── auth41-federation-broker/
 │   ├── auth41-themes/
 │   ├── auth41-ciba/         # CIBA authentication flow
-│   └── auth41-backchannel-file/  # File-based backchannel for testing
+│   ├── auth41-backchannel-file/  # File-based backchannel for testing
+│   └── auth41-backchannel-mock/  # Mock backchannel for automated tests
 ├── test/                    # Integration tests (manual for now)
 └── docs/                    # Documentation
 ```
@@ -241,8 +250,12 @@ Contributions are welcome! Please see [Development Guide](docs/development.md) f
 
 - [x] CIBA (Client-Initiated Backchannel Authentication) support
 - [x] File-based backchannel for CIBA testing
-- [ ] Push notification backchannel for CIBA
-- [ ] Mock-based integration testing framework
+- [x] Mock backchannel for automated testing
+- [x] Comprehensive unit tests for CIBA components
+- [ ] Integration tests with file-based backchannel
+- [ ] Token endpoint implementation for CIBA
+- [ ] Client authentication (client_secret, JWT, mTLS)
+- [ ] Push notification backchannel for production
 - [ ] Admin UI extensions for trust network management
 - [ ] Metrics and monitoring integration
 - [ ] Performance optimizations
