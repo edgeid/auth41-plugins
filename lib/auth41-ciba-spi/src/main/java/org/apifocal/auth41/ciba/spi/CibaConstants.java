@@ -44,6 +44,7 @@ public final class CibaConstants {
     public static final int DEFAULT_EXPIRES_IN = 300; // 5 minutes
     public static final int DEFAULT_POLL_INTERVAL = 5; // 5 seconds
     public static final int DEFAULT_CLEANUP_THRESHOLD = 3600; // 1 hour
+    public static final int MAX_BINDING_MESSAGE_LENGTH = 256; // Maximum length for binding message display
 
     // Discovery document keys
     public static final String DISCOVERY_BACKCHANNEL_AUTH_ENDPOINT = "backchannel_authentication_endpoint";

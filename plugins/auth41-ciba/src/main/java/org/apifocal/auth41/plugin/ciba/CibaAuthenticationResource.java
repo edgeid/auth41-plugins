@@ -116,7 +116,7 @@ public class CibaAuthenticationResource {
     }
 
     private CibaAuthRequest validateRequest(MultivaluedMap<String, String> formParams) throws ValidationException {
-        String scope = formParams.getFirst(CibaConstants.PARAM_LOGIN_HINT);
+        String scope = formParams.getFirst("scope");
         String loginHint = formParams.getFirst(CibaConstants.PARAM_LOGIN_HINT);
         String bindingMessage = formParams.getFirst(CibaConstants.PARAM_BINDING_MESSAGE);
         String userCode = formParams.getFirst(CibaConstants.PARAM_USER_CODE);
@@ -130,6 +130,13 @@ public class CibaAuthenticationResource {
 
         if (ValidationUtils.isNullOrEmpty(clientId)) {
             throw new ValidationException("invalid_request", "Missing client_id parameter");
+        }
+
+        // Validate optional binding_message length
+        if (bindingMessage != null && bindingMessage.length() > CibaConstants.MAX_BINDING_MESSAGE_LENGTH) {
+            throw new ValidationException("invalid_request",
+                String.format("binding_message exceeds maximum length of %d characters",
+                    CibaConstants.MAX_BINDING_MESSAGE_LENGTH));
         }
 
         // Parse optional requested_expiry
