@@ -296,8 +296,12 @@ RESPONSE=$(curl -s -X POST http://localhost:8080/realms/$REALM/ext/ciba/auth \
 
 echo "Response: $RESPONSE"
 
-# Extract auth_req_id
-AUTH_REQ_ID=$(echo $RESPONSE | grep -o '"auth_req_id":"[^"]*"' | cut -d'"' -f4)
+# Extract auth_req_id (prefer jq for robust JSON parsing, fallback to grep if jq is unavailable)
+if command -v jq >/dev/null 2>&1; then
+    AUTH_REQ_ID=$(echo "$RESPONSE" | jq -r '.auth_req_id // empty')
+else
+    AUTH_REQ_ID=$(echo "$RESPONSE" | grep -o '"auth_req_id":"[^"]*"' | cut -d'"' -f4)
+fi
 
 if [ -z "$AUTH_REQ_ID" ]; then
     echo "❌ Failed to get auth_req_id"
