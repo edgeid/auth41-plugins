@@ -52,6 +52,18 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Auth41 shared libraries -->
+            <dependency>
+                <groupId>org.apifocal.auth41</groupId>
+                <artifactId>auth41-commons</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apifocal.auth41</groupId>
+                <artifactId>auth41-spi-commons</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- Keycloak dependencies -->
             <dependency>
                 <groupId>org.keycloak</groupId>

@@ -17,6 +17,16 @@
     <description>Provider discovery service for Auth41 federation - discovers which provider has a user's account</description>
 
     <dependencies>
+        <!-- Auth41 Shared Libraries -->
+        <dependency>
+            <groupId>org.apifocal.auth41</groupId>
+            <artifactId>auth41-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apifocal.auth41</groupId>
+            <artifactId>auth41-spi-commons</artifactId>
+        </dependency>
+
         <!-- Keycloak dependencies -->
         <dependency>
             <groupId>org.keycloak</groupId>
