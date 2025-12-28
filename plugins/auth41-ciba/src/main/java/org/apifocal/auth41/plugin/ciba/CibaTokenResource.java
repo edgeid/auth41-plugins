@@ -52,8 +52,10 @@ public class CibaTokenResource {
      * has been approved, denied, or is still pending.
      *
      * Per CIBA spec, this would normally be the standard token endpoint with
-     * grant_type=urn:openid:params:grant-type:ciba, but for Keycloak 23.x
-     * we use a custom endpoint until OAuth2 Grant Type SPI is available (KC 24+).
+     * grant_type=urn:openid:params:grant-type:ciba. Although the OAuth2 Grant Type
+     * SPI is available in the Keycloak 26.x baseline used by this codebase, we
+     * continue to expose a custom endpoint for now to preserve existing behavior
+     * and integrations until a full migration to the native SPI is completed.
      */
     @POST
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
@@ -95,6 +97,12 @@ public class CibaTokenResource {
             // Check authentication status
             BackchannelAuthStatus status = backchannelProvider.getAuthenticationStatus(authReqId);
 
+            // Verify status is not null
+            if (status == null) {
+                logger.errorf("BackchannelProvider returned null status for auth_req_id: %s", authReqId);
+                return errorResponse("invalid_request", "Authentication request not found", Response.Status.BAD_REQUEST);
+            }
+
             logger.debugf("CIBA token poll: auth_req_id=%s, status=%s, client=%s",
                 authReqId, status.getStatus(), clientId);
 
@@ -130,6 +138,16 @@ public class CibaTokenResource {
                 case APPROVED:
                     // Authentication approved - return success response
                     logger.infof("CIBA authentication approved: %s, user=%s", authReqId, status.getUserId());
+
+                    // Ensure userId is present before looking up the user
+                    if (status.getUserId() == null) {
+                        logger.errorf("Missing userId for approved CIBA request: authReqId=%s", authReqId);
+                        return errorResponse(
+                            "invalid_grant",
+                            "User information is missing for the approved authentication request",
+                            Response.Status.BAD_REQUEST
+                        );
+                    }
 
                     // Verify user exists
                     UserModel user = session.users().getUserById(realm, status.getUserId());

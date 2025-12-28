@@ -85,7 +85,7 @@
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-core</artifactId>
-            <version>6.2.10.Final</version>
+            <version>${resteasy.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -3,6 +3,7 @@ package org.apifocal.auth41.plugin.ciba;
 import org.keycloak.models.KeycloakSession;
 
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.ext.Provider;
 
 /**
  * Root resource for CIBA endpoints.
@@ -10,7 +11,10 @@ import jakarta.ws.rs.Path;
  * Provides sub-resources:
  * - /realms/{realm}/ext/ciba/auth - Backchannel authentication initiation
  * - /realms/{realm}/ext/ciba/token - Token polling endpoint
+ *
+ * Note: @Provider annotation is required for Keycloak 24+ (RESTEasy Reactive)
  */
+@Provider
 public class CibaRootResource {
 
     private final KeycloakSession session;

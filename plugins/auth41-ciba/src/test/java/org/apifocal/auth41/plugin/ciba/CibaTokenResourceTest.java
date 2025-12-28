@@ -371,6 +371,26 @@ class CibaTokenResourceTest {
     }
 
     @Test
+    void shouldReturnErrorWhenApprovedStatusHasNullUserId() throws BackchannelException {
+        // Given
+        BackchannelAuthStatus status = BackchannelAuthStatus.builder()
+            .authReqId(TEST_AUTH_REQ_ID)
+            .status(BackchannelAuthStatus.Status.APPROVED)
+            .userId(null)  // Null userId
+            .build();
+        when(backchannelProvider.getAuthenticationStatus(TEST_AUTH_REQ_ID)).thenReturn(status);
+
+        // When
+        Response response = tokenResource.token(headers, formParams);
+
+        // Then
+        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        OAuth2ErrorRepresentation error = (OAuth2ErrorRepresentation) response.getEntity();
+        assertThat(error.getError()).isEqualTo("invalid_grant");
+        assertThat(error.getErrorDescription()).isEqualTo("User information is missing for the approved authentication request");
+    }
+
+    @Test
     void shouldReturnErrorWhenUserNotFoundForApprovedRequest() throws BackchannelException {
         // Given
         BackchannelAuthStatus status = BackchannelAuthStatus.builder()
@@ -389,6 +409,23 @@ class CibaTokenResourceTest {
         OAuth2ErrorRepresentation error = (OAuth2ErrorRepresentation) response.getEntity();
         assertThat(error.getError()).isEqualTo("invalid_grant");
         assertThat(error.getErrorDescription()).isEqualTo("User not found");
+    }
+
+    // ==================== Null Status Tests ====================
+
+    @Test
+    void shouldReturnErrorWhenBackchannelProviderReturnsNullStatus() throws BackchannelException {
+        // Given
+        when(backchannelProvider.getAuthenticationStatus(TEST_AUTH_REQ_ID)).thenReturn(null);
+
+        // When
+        Response response = tokenResource.token(headers, formParams);
+
+        // Then
+        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        OAuth2ErrorRepresentation error = (OAuth2ErrorRepresentation) response.getEntity();
+        assertThat(error.getError()).isEqualTo("invalid_request");
+        assertThat(error.getErrorDescription()).isEqualTo("Authentication request not found");
     }
 
     // ==================== Exception Handling Tests ====================
