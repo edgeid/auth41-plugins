@@ -20,5 +20,6 @@
     <modules>
         <module>auth41-commons</module>
         <module>auth41-spi-commons</module>
+        <module>auth41-ciba-spi</module>
     </modules>
 </project>

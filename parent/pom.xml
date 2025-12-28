@@ -63,6 +63,11 @@
                 <artifactId>auth41-spi-commons</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.apifocal.auth41</groupId>
+                <artifactId>auth41-ciba-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- Keycloak dependencies -->
             <dependency>
