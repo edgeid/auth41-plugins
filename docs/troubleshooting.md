@@ -106,7 +106,7 @@ curl https://provider.example.com/realms/main/protocol/openid-connect/certs
 4. **Version incompatibility**
 
    **Solution**:
-   - Verify Keycloak version is 23.x or later
+   - Verify Keycloak version is 23.0.0 or later
    - Check plugin was built for correct Keycloak version
    - Rebuild plugins: `mvn clean install`
 
@@ -309,7 +309,7 @@ curl https://provider.example.com/realms/main/protocol/openid-connect/certs
 
    **Solution**:
    - Admin Console → Realm Settings → Themes
-   - Select auth41-corporate, auth41-modern, or auth41-minimal
+   - Select auth41-classic, auth41-modern, or auth41-minimal
    - Save and clear browser cache
 
 3. **Theme cache**

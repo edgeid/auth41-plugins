@@ -246,7 +246,7 @@ Auth41 extends Keycloak through six integrated plugins that work together to pro
 ```
 
 **Included Themes**:
-- **auth41-corporate**: Professional corporate styling (navy blue)
+- **auth41-classic**: Classic professional styling (navy blue)
 - **auth41-modern**: Modern gradient design (purple gradients)
 - **auth41-minimal**: Minimal clean design (black/white)
 

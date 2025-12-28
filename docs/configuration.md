@@ -316,9 +316,9 @@ Configure Auth41 themes:
 
 1. Navigate to **Realm Settings** → **Themes**
 2. Select themes:
-   - **Login Theme**: `auth41-corporate`, `auth41-modern`, or `auth41-minimal`
-   - **Account Theme**: `auth41-corporate`, `auth41-modern`, or `auth41-minimal`
-   - **Email Theme**: `auth41-corporate`, `auth41-modern`, or `auth41-minimal`
+   - **Login Theme**: `auth41-classic`, `auth41-modern`, or `auth41-minimal`
+   - **Account Theme**: `auth41-classic`, `auth41-modern`, or `auth41-minimal`
+   - **Email Theme**: `auth41-classic`, `auth41-modern`, or `auth41-minimal`
 3. Click **Save**
 
 #### Dynamic Theme Selection
@@ -331,7 +331,7 @@ Use realm attributes for dynamic selection:
    - **Value**: `auth41-modern`
 3. For client-specific themes:
    - **Key**: `auth41.theme.client.{client-id}`
-   - **Value**: `auth41-corporate`
+   - **Value**: `auth41-classic`
 
 #### User-Specific Themes
 
@@ -552,7 +552,7 @@ export AUTH41_LOG_LEVEL=INFO
 2. Configure authentication flow with Federation Broker
 3. Set up attribute mappers for email, firstName, lastName
 4. Enable automatic account linking by email
-5. Select `auth41-corporate` theme
+5. Select `auth41-classic` theme
 
 **User Flow**:
 1. Student from University A (`student@university-a.edu`) accesses resource at consortium hub
