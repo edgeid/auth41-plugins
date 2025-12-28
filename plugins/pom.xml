@@ -20,6 +20,9 @@
 
     <modules>
         <module>auth41-accounts</module>
+        <module>auth41-backchannel-file</module>
+        <module>auth41-backchannel-mock</module>
+        <module>auth41-ciba</module>
         <module>auth41-discovery</module>
         <module>auth41-federation-broker</module>
         <module>auth41-themes</module>

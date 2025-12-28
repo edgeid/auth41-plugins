@@ -16,6 +16,16 @@
     <description>Trust network management for OIDC federation</description>
 
     <dependencies>
+        <!-- Auth41 Shared Libraries -->
+        <dependency>
+            <groupId>org.apifocal.auth41</groupId>
+            <artifactId>auth41-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apifocal.auth41</groupId>
+            <artifactId>auth41-spi-commons</artifactId>
+        </dependency>
+
         <!-- Keycloak Dependencies -->
         <dependency>
             <groupId>org.keycloak</groupId>

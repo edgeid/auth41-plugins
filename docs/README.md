@@ -16,6 +16,7 @@ Welcome to the Auth41 documentation. This collection of Keycloak plugins enables
 - [Accounts Plugin](plugins/accounts.md) - Federated account management
 - [Federation Broker Plugin](plugins/federation-broker.md) - Authentication broker for federated flows
 - [Themes Plugin](plugins/themes.md) - Dynamic theme selection
+- [CIBA Plugin](plugins/ciba.md) - Client-Initiated Backchannel Authentication
 
 ### Examples
 - [Hub-and-Spoke Federation](examples/hub-spoke.md) - Setting up a hub-and-spoke federation topology
@@ -40,6 +41,7 @@ Auth41 is a collection of Keycloak plugins that enable **federated authenticatio
 - **Federation Broker** - Transparent authentication redirection
 - **Shadow Accounts** - Automatic federated user provisioning
 - **Dynamic Themes** - Customize UI based on realm, client, or user
+- **CIBA Support** - Client-Initiated Backchannel Authentication for decoupled flows
 
 ## Use Cases
 

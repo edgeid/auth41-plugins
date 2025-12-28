@@ -52,6 +52,23 @@
 
     <dependencyManagement>
         <dependencies>
+            <!-- Auth41 shared libraries -->
+            <dependency>
+                <groupId>org.apifocal.auth41</groupId>
+                <artifactId>auth41-commons</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apifocal.auth41</groupId>
+                <artifactId>auth41-spi-commons</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apifocal.auth41</groupId>
+                <artifactId>auth41-ciba-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- Keycloak dependencies -->
             <dependency>
                 <groupId>org.keycloak</groupId>
@@ -108,6 +125,11 @@
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.datatype</groupId>
+                <artifactId>jackson-datatype-jsr310</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
 
