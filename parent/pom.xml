@@ -22,12 +22,12 @@
         <maven.compiler.release>17</maven.compiler.release>
 
         <!-- Keycloak version -->
-        <keycloak.version>23.0.4</keycloak.version>
+        <keycloak.version>26.0.7</keycloak.version>
 
         <!-- Testing -->
+        <assertj.version>3.25.1</assertj.version>
         <junit.version>5.10.1</junit.version>
         <mockito.version>5.8.0</mockito.version>
-        <assertj.version>3.25.1</assertj.version>
 
         <!-- Logging -->
         <slf4j.version>2.0.9</slf4j.version>
@@ -36,6 +36,7 @@
 
         <!-- Utilities -->
         <jackson.version>2.16.1</jackson.version>
+        <resteasy.version>6.2.10.Final</resteasy.version>
 
         <!-- Persistence -->
         <hibernate.version>6.2.13.Final</hibernate.version>

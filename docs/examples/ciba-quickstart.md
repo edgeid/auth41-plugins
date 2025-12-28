@@ -269,6 +269,47 @@ curl -X POST http://localhost:8080/realms/ciba-test/ext/ciba/auth \
 }
 ```
 
+### 5. Test Token Polling
+
+After initiating authentication, poll the token endpoint:
+
+```bash
+AUTH_REQ_ID="urn:uuid:550e8400-e29b-41d4-a716-446655440000"  # Use actual ID from auth response
+
+# Poll while pending
+curl -X POST http://localhost:8080/realms/ciba-test/ext/ciba/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "client_id=ciba-client" \
+  -d "auth_req_id=${AUTH_REQ_ID}"
+```
+
+**Response when still pending:**
+```json
+{
+  "error": "authorization_pending",
+  "error_description": "The authorization request is still pending"
+}
+```
+
+**Response when approved** (after user approves via backchannel):
+```json
+{
+  "status": "APPROVED",
+  "auth_req_id": "urn:uuid:550e8400-e29b-41d4-a716-446655440000",
+  "user_id": "testuser",
+  "username": "testuser@example.com",
+  "message": "Authentication approved. Token generation will be implemented in next version."
+}
+```
+
+**Response when denied:**
+```json
+{
+  "error": "access_denied",
+  "error_description": "User denied the authentication request"
+}
+```
+
 ## Automated Test Script
 
 Create a simple test script:
@@ -310,13 +351,38 @@ fi
 
 echo "✓ Got auth_req_id: $AUTH_REQ_ID"
 
-# Wait for mock approval
-echo "2. Waiting for auto-approval (2 seconds)..."
-sleep 3
+# Poll for status
+echo "2. Polling for authentication status..."
+for i in {1..10}; do
+    echo "   Attempt $i..."
+    TOKEN_RESPONSE=$(curl -s -X POST http://localhost:8080/realms/$REALM/ext/ciba/token \
+      -H "Content-Type: application/x-www-form-urlencoded" \
+      -d "client_id=$CLIENT_ID" \
+      -d "auth_req_id=$AUTH_REQ_ID")
 
-echo "✓ Authentication should be approved (check Keycloak logs)"
-echo ""
-echo "To complete the flow, implement token endpoint polling (not yet available)"
+    # Check if approved
+    if command -v jq >/dev/null 2>&1; then
+        STATUS=$(echo "$TOKEN_RESPONSE" | jq -r '.status // .error')
+    else
+        STATUS=$(echo "$TOKEN_RESPONSE" | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+        [ -z "$STATUS" ] && STATUS=$(echo "$TOKEN_RESPONSE" | grep -o '"error":"[^"]*"' | cut -d'"' -f4)
+    fi
+
+    if [ "$STATUS" = "APPROVED" ]; then
+        echo "✓ Authentication approved!"
+        echo "Response: $TOKEN_RESPONSE"
+        exit 0
+    elif [ "$STATUS" = "authorization_pending" ]; then
+        echo "   Still pending, waiting..."
+        sleep 2
+    else
+        echo "❌ Authentication failed: $STATUS"
+        echo "Response: $TOKEN_RESPONSE"
+        exit 1
+    fi
+done
+
+echo "❌ Timeout: Authentication not completed within polling period"
 ```
 
 Make it executable:
@@ -348,9 +414,9 @@ chmod +x test-ciba.sh
 
 ## Next Steps
 
-1. **Implement Token Endpoint**: The CIBA flow needs token endpoint integration for completing the authentication
-2. **Add Client Authentication**: Implement proper client_secret, JWT, or mTLS authentication
-3. **Production Deployment**: Use push notification backchannel (planned)
+1. **Token Generation**: Integrate with Keycloak's TokenManager to generate OAuth2 access_token, refresh_token, and id_token
+2. **Client Authentication**: Implement proper client_secret, JWT, or mTLS authentication for token endpoint
+3. **Push Notification Backchannel**: Implement production-ready push notification provider
 4. **Federation Integration**: Combine CIBA with Auth41 federation for cross-organization authentication
 
 ## Related Documentation
