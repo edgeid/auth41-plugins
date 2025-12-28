@@ -42,7 +42,8 @@ Implements the CIBA authentication endpoint and token exchange:
 
 Pluggable implementations of the BackchannelProvider SPI:
 
-- **auth41-backchannel-file**: File-based implementation for testing (inbox/outbox pattern)
+- **auth41-backchannel-file**: File-based implementation for manual/integration testing (inbox/outbox pattern)
+- **auth41-backchannel-mock**: Mock implementation for automated testing with configurable outcomes
 - **auth41-backchannel-push** (future): Push notification implementation for production
 
 ## Installation
@@ -59,12 +60,17 @@ mvn clean install
 Copy the required JARs to Keycloak's providers directory:
 
 ```bash
-# Core CIBA components
+# Core CIBA components (required)
 cp lib/auth41-ciba-spi/target/auth41-ciba-spi-*.jar $KEYCLOAK_HOME/providers/
 cp plugins/auth41-ciba/target/auth41-ciba-*.jar $KEYCLOAK_HOME/providers/
 
-# File-based backchannel (for testing)
+# Choose ONE backchannel implementation:
+
+# Option A: File-based backchannel (for manual/integration testing)
 cp plugins/auth41-backchannel-file/target/auth41-backchannel-file-*.jar $KEYCLOAK_HOME/providers/
+
+# Option B: Mock backchannel (for automated testing)
+cp plugins/auth41-backchannel-mock/target/auth41-backchannel-mock-*.jar $KEYCLOAK_HOME/providers/
 
 # Rebuild Keycloak
 $KEYCLOAK_HOME/bin/kc.sh build
@@ -72,11 +78,20 @@ $KEYCLOAK_HOME/bin/kc.sh build
 
 ### 3. Configure Backchannel Provider
 
-Configure the file-based backchannel (for testing):
+**Option A: File-based backchannel** (manual testing):
 
 ```bash
 $KEYCLOAK_HOME/bin/kc.sh start-dev \
+  --spi-backchannel-provider=file \
   --spi-backchannel-file-base-directory=/var/auth41/backchannel
+```
+
+**Option B: Mock backchannel** (automated testing):
+
+```bash
+$KEYCLOAK_HOME/bin/kc.sh start-dev \
+  --spi-backchannel-provider=mock-test-only \
+  --spi-backchannel-mock-test-only-delay=2000
 ```
 
 ## Usage
@@ -219,6 +234,70 @@ EOF
 done
 ```
 
+## Mock Backchannel (Automated Testing)
+
+**⚠️ DO NOT USE IN PRODUCTION ⚠️**
+
+The mock backchannel provides automated authentication responses for testing, eliminating the need for manual file manipulation or external services.
+
+### Features
+
+- **Configurable delays**: Simulate authentication processing time
+- **Rate-based outcomes**: Control approval/denial/error percentages
+- **Auto-approval mode**: Automatically process requests after delay
+- **In-memory storage**: No external dependencies
+- **Safety warnings**: Prominent logging to prevent production use
+
+### Configuration
+
+```bash
+# Basic usage (100% approval after 3 seconds)
+$KEYCLOAK_HOME/bin/kc.sh start-dev \
+  --spi-backchannel-provider=mock-test-only
+
+# Custom configuration
+$KEYCLOAK_HOME/bin/kc.sh start-dev \
+  --spi-backchannel-provider=mock-test-only \
+  --spi-backchannel-mock-test-only-delay=2000 \
+  --spi-backchannel-mock-test-only-approval-rate=80 \
+  --spi-backchannel-mock-test-only-error-rate=10 \
+  --spi-backchannel-mock-test-only-auto-approve=true
+```
+
+### Parameters
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `delay` | 3000 | Delay in milliseconds before responding |
+| `approvalRate` | 100 | Percentage of requests that are approved (0-100) |
+| `errorRate` | 0 | Percentage of requests that fail with errors (0-100) |
+| `autoApprove` | true | Whether to automatically process requests |
+
+**Note**: `approvalRate + errorRate` must not exceed 100. The remaining percentage will be denied.
+
+### Example Scenarios
+
+**Fast Testing** (100ms delay):
+```bash
+--spi-backchannel-provider=mock-test-only \
+--spi-backchannel-mock-test-only-delay=100
+```
+
+**Realistic Testing** (80% approve, 10% deny, 10% error):
+```bash
+--spi-backchannel-provider=mock-test-only \
+--spi-backchannel-mock-test-only-approval-rate=80 \
+--spi-backchannel-mock-test-only-error-rate=10
+```
+
+**Manual Control** (no auto-approval):
+```bash
+--spi-backchannel-provider=mock-test-only \
+--spi-backchannel-mock-test-only-auto-approve=false
+```
+
+See [Mock Backchannel README](../../plugins/auth41-backchannel-mock/README.md) for more details.
+
 ## Configuration
 
 ### Backchannel Provider Selection
@@ -226,15 +305,18 @@ done
 Keycloak will use the first available BackchannelProvider. To specify a particular provider:
 
 ```bash
-# Use file-based backchannel
--Dspi-backchannel-provider=file
+# Use file-based backchannel (manual testing)
+--spi-backchannel-provider=file
+
+# Use mock backchannel (automated testing)
+--spi-backchannel-provider=mock-test-only
 ```
 
 ### File Backchannel Configuration
 
 ```bash
 # Custom base directory
--Dspi-backchannel-file-base-directory=/custom/path
+--spi-backchannel-file-base-directory=/custom/path
 
 # Example with all options
 $KEYCLOAK_HOME/bin/kc.sh start \
@@ -255,9 +337,16 @@ The current implementation performs basic client validation. For production use:
 ### Request Validation
 
 - **login_hint**: Required. Can be username or email address
-- **binding_message**: Optional. Displayed to user during authentication
+- **binding_message**: Optional. Displayed to user during authentication. Maximum length: 256 characters
 - **user_code**: Optional. Short code user must enter to confirm
-- **requested_expiry**: Optional. Request expiry in seconds (default: 300)
+- **requested_expiry**: Optional. Request expiry in seconds (default: 300). Must be positive if provided
+- **scope**: Optional. OAuth2 scopes to request (e.g., "openid profile")
+
+**Validation Rules**:
+- `login_hint` and `client_id` are mandatory
+- `binding_message` exceeding 256 characters will be rejected with `invalid_request` error
+- `requested_expiry` must be a positive integer if provided
+- Invalid or missing required parameters return HTTP 400 with OAuth2 error response
 
 ### Response Security
 
