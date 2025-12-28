@@ -18,21 +18,22 @@ Auth41 extends Keycloak with capabilities for multi-organization federation, all
 - **🔐 Federation Broker** - Transparent authentication redirection to home providers
 - **👤 Shadow Account Management** - Automatic federated user provisioning and synchronization
 - **🎨 Dynamic Theming** - Realm, client, and user-based theme selection
+- **📱 CIBA Support** - Client-Initiated Backchannel Authentication for decoupled authentication flows
 
 ## Architecture
 
-Auth41 consists of six integrated plugins:
+Auth41 consists of eight integrated plugins:
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Auth41 Federation                        │
-├─────────────────────────────────────────────────────────────┤
-│  Trust Network  │  Topology  │  Discovery  │  Accounts      │
-│  Configuration  │  Provider  │  Service    │  Management    │
-├─────────────────────────────────────────────────────────────┤
-│         Federation Broker    │    Theme Selector            │
-│         (Authenticator)      │    (Theme Provider)          │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                       Auth41 Federation                          │
+├──────────────────────────────────────────────────────────────────┤
+│  Trust Network  │  Topology  │  Discovery  │  Accounts          │
+│  Configuration  │  Provider  │  Service    │  Management        │
+├──────────────────────────────────────────────────────────────────┤
+│  Federation     │    Theme   │    CIBA     │  Backchannel       │
+│  Broker         │  Selector  │  Provider   │  Implementations   │
+└──────────────────────────────────────────────────────────────────┘
                             │
                     ┌───────┴───────┐
                     │   Keycloak    │
@@ -210,13 +211,19 @@ mvn clean verify
 ```
 auth41-plugins/
 ├── parent/                  # Parent POM with dependency management
+├── lib/                     # Shared libraries
+│   ├── auth41-commons/      # Common utilities
+│   ├── auth41-spi-commons/  # Keycloak SPI base classes
+│   └── auth41-ciba-spi/     # CIBA abstraction interfaces
 ├── plugins/                 # Plugin modules
 │   ├── auth41-trust-network/
 │   ├── auth41-topology/
 │   ├── auth41-discovery/
 │   ├── auth41-accounts/
 │   ├── auth41-federation-broker/
-│   └── auth41-themes/
+│   ├── auth41-themes/
+│   ├── auth41-ciba/         # CIBA authentication flow
+│   └── auth41-backchannel-file/  # File-based backchannel for testing
 ├── test/                    # Integration tests (manual for now)
 └── docs/                    # Documentation
 ```
@@ -232,7 +239,9 @@ Contributions are welcome! Please see [Development Guide](docs/development.md) f
 
 ## Roadmap
 
-- [ ] CIBA (Client-Initiated Backchannel Authentication) support
+- [x] CIBA (Client-Initiated Backchannel Authentication) support
+- [x] File-based backchannel for CIBA testing
+- [ ] Push notification backchannel for CIBA
 - [ ] Mock-based integration testing framework
 - [ ] Admin UI extensions for trust network management
 - [ ] Metrics and monitoring integration
