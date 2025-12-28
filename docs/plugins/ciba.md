@@ -31,12 +31,18 @@ public interface BackchannelProvider extends Provider {
 
 ### 2. CIBA Authentication Flow (auth41-ciba)
 
-Implements the CIBA authentication endpoint and token exchange:
+Implements the CIBA authentication and token endpoints:
 
 - **Backchannel Authentication Endpoint**: `POST /realms/{realm}/ext/ciba/auth`
-- Request validation and user discovery
-- Integration with BackchannelProvider implementations
-- OAuth2-compliant error responses
+  - Request validation and user discovery
+  - Integration with BackchannelProvider implementations
+  - Returns `auth_req_id` for polling
+
+- **CIBA Token Polling Endpoint**: `POST /realms/{realm}/ext/ciba/token`
+  - Poll authentication status with `auth_req_id`
+  - Returns authorization_pending, access_denied, or approved status
+  - OAuth2-compliant error responses
+  - **Note**: Currently returns status information; full OAuth2 token generation will be added in a future release
 
 ### 3. Backchannel Implementations
 
@@ -143,13 +149,40 @@ EOF
 4. **Client polls for status** (poll mode):
 
 ```bash
-curl -X POST https://keycloak.example.com/realms/myrealm/protocol/openid-connect/token \
+curl -X POST https://keycloak.example.com/realms/myrealm/ext/ciba/token \
   -H "Content-Type: application/x-www-form-urlencoded" \
-  -d "grant_type=urn:openid:params:grant-type:ciba" \
   -d "client_id=my-client" \
-  -d "client_secret=secret" \
   -d "auth_req_id=urn:uuid:550e8400-e29b-41d4-a716-446655440000"
 ```
+
+**Pending Response**:
+```json
+{
+  "error": "authorization_pending",
+  "error_description": "The authorization request is still pending"
+}
+```
+
+**Approved Response** (current implementation):
+```json
+{
+  "status": "APPROVED",
+  "auth_req_id": "urn:uuid:550e8400-e29b-41d4-a716-446655440000",
+  "user_id": "user-123",
+  "username": "user@example.com",
+  "message": "Authentication approved. Token generation will be implemented in next version."
+}
+```
+
+**Denied Response**:
+```json
+{
+  "error": "access_denied",
+  "error_description": "User denied the authentication request"
+}
+```
+
+**Note**: The current implementation returns authentication status information. A future release will integrate with Keycloak's TokenManager to return standard OAuth2 tokens (access_token, refresh_token, id_token) as per the CIBA specification.
 
 ## File-Based Backchannel (Testing)
 

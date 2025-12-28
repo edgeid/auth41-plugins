@@ -16,7 +16,7 @@ public class CibaResourceProvider implements RealmResourceProvider {
 
     @Override
     public Object getResource() {
-        return new CibaAuthenticationResource(session);
+        return new CibaRootResource(session);
     }
 
     @Override
