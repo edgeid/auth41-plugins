@@ -136,7 +136,7 @@ public class CibaTokenResource {
                     );
 
                 case APPROVED:
-                    // Authentication approved - return success response
+                    // Authentication approved - generate OAuth2 tokens
                     logger.infof("CIBA authentication approved: %s, user=%s", authReqId, status.getUserId());
 
                     // Ensure userId is present before looking up the user
@@ -157,23 +157,42 @@ public class CibaTokenResource {
                         return errorResponse("invalid_grant", "User not found", Response.Status.BAD_REQUEST);
                     }
 
-                    // TODO: Generate actual OAuth2 tokens using Keycloak's TokenManager
-                    // For now, return a success response with user information
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("status", "APPROVED");
-                    response.put("auth_req_id", authReqId);
-                    response.put("user_id", status.getUserId());
-                    response.put("username", user.getUsername());
-                    response.put("message", "Authentication approved. Token generation will be implemented in next version.");
+                    // Generate OAuth2 tokens
+                    try {
+                        CibaTokenGenerator tokenGenerator = new CibaTokenGenerator(session);
+                        CibaTokenGenerator.TokenResponse tokenResponse = tokenGenerator.generateTokens(
+                            user,
+                            client,
+                            status.getScope(),
+                            authReqId
+                        );
 
-                    // Note: In production, this should return:
-                    // - access_token
-                    // - token_type (Bearer)
-                    // - expires_in
-                    // - refresh_token (optional)
-                    // - id_token (if openid scope)
+                        // Build OAuth2 token response
+                        Map<String, Object> response = new HashMap<>();
+                        response.put("access_token", tokenResponse.getAccessToken());
+                        response.put("token_type", tokenResponse.getTokenType());
+                        response.put("expires_in", tokenResponse.getExpiresIn());
 
-                    return Response.ok(response).build();
+                        if (tokenResponse.getRefreshToken() != null) {
+                            response.put("refresh_token", tokenResponse.getRefreshToken());
+                            response.put("refresh_expires_in", tokenResponse.getRefreshExpiresIn());
+                        }
+
+                        if (tokenResponse.getIdToken() != null) {
+                            response.put("id_token", tokenResponse.getIdToken());
+                        }
+
+                        if (tokenResponse.getScope() != null) {
+                            response.put("scope", tokenResponse.getScope());
+                        }
+
+                        logger.infof("Successfully generated OAuth2 tokens for CIBA: authReqId=%s", authReqId);
+                        return Response.ok(response).build();
+
+                    } catch (CibaTokenGenerator.TokenGenerationException e) {
+                        logger.errorf(e, "Failed to generate tokens for approved CIBA request: %s", authReqId);
+                        return errorResponse("server_error", "Failed to generate tokens", Response.Status.INTERNAL_SERVER_ERROR);
+                    }
 
                 default:
                     logger.errorf("Unknown CIBA authentication status: %s", status.getStatus());

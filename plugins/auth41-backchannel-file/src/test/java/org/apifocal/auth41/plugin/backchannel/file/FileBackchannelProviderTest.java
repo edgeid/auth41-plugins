@@ -99,7 +99,7 @@ class FileBackchannelProviderTest {
     void shouldReadApprovedResponseFromOutbox() throws Exception {
         // Given
         String authReqId = "auth-789";
-        FileBackchannelResponse response = FileBackchannelResponse.approved(authReqId, "user-123");
+        FileBackchannelResponse response = FileBackchannelResponse.approved(authReqId, "user-123", "openid profile");
 
         Path responseFile = tempDir.resolve("outbox/" + authReqId + ".json");
         Files.createDirectories(responseFile.getParent());

@@ -125,6 +125,7 @@ public class FileBackchannelProvider implements BackchannelProvider {
                 .authReqId(authReqId)
                 .status(status)
                 .userId(response.getUserId())
+                .scope(response.getScope())
                 .errorCode(response.getErrorCode())
                 .errorDescription(response.getErrorDescription())
                 .updatedAt(response.getUpdatedAt())
