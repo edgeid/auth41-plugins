@@ -2,7 +2,8 @@
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![Keycloak](https://img.shields.io/badge/Keycloak-23.x-blue.svg)](https://www.keycloak.org/)
+[![Keycloak](https://img.shields.io/badge/Keycloak-26.x-blue.svg)](https://www.keycloak.org/)
+[![Maven Central](https://img.shields.io/maven-central/v/org.apifocal.auth41/auth41-root.svg)](https://central.sonatype.com/namespace/org.apifocal.auth41)
 
 A collection of Keycloak plugins that enable federated authentication across multiple identity providers using a trust network model.
 
@@ -47,39 +48,57 @@ See [Architecture Documentation](docs/architecture.md) for details.
 
 ### Prerequisites
 
-- Keycloak 23.x or later
-- Java 17+
+- Keycloak 26.x or later
+- Java 21+
 - Maven 3.8+ (for building from source)
 
 ### Installation
 
-1. **Build the plugins**:
+#### Option 1: From Maven Central (Recommended)
+
 
 ```bash
+# Download all plugins
+ * org.apifocal.auth41:auth41-commons:<latest>
+ * org.apifocal.auth41:auth41-spi-commons:<latest>
+ * org.apifocal.auth41:auth41-ciba-spi:<latest>
+ * org.apifocal.auth41.plugin:auth41-trust-network:<latest>
+ * org.apifocal.auth41.plugin:auth41-topology:<latest>
+ * org.apifocal.auth41.plugin:auth41-discovery:<latest>
+ * org.apifocal.auth41.plugin:auth41-accounts:<latest>
+ * org.apifocal.auth41.plugin:auth41-federation-broker:<latest>
+ * org.apifocal.auth41.plugin:auth41-themes:<latest>
+ * org.apifocal.auth41.plugin:auth41-ciba:<latest>
+ * org.apifocal.auth41.plugin:auth41-backchannel-mock:<latest>
+
+# Copy to Keycloak providers directory
+cp ~/.m2/repository/org/apifocal/auth41/*/*/*.jar $KEYCLOAK_HOME/providers/
+
+# Rebuild and start Keycloak
+$KEYCLOAK_HOME/bin/kc.sh build
+$KEYCLOAK_HOME/bin/kc.sh start
+```
+
+#### Option 2: Build from Source
+
+```bash
+# Clone repository
 git clone https://github.com/apifocal/auth41-plugins.git
 cd auth41-plugins
+
+# Build all plugins
 mvn clean install
-```
 
-2. **Deploy to Keycloak**:
-
-```bash
-# Copy plugin JARs to Keycloak providers directory
+# Deploy to Keycloak
 cp plugins/*/target/*.jar $KEYCLOAK_HOME/providers/
+cp lib/*/target/*.jar $KEYCLOAK_HOME/providers/
 
-# Rebuild Keycloak
+# Rebuild and start Keycloak
 $KEYCLOAK_HOME/bin/kc.sh build
-```
-
-3. **Restart Keycloak**:
-
-```bash
 $KEYCLOAK_HOME/bin/kc.sh start-dev
 ```
 
-4. **Verify installation**:
-
-Check Keycloak logs for Auth41 plugin loading messages.
+**Verify installation**: Check Keycloak logs for Auth41 plugin loading messages.
 
 See [Installation Guide](docs/installation.md) for detailed instructions.
 
@@ -252,9 +271,11 @@ Contributions are welcome! Please see [Development Guide](docs/development.md) f
 - [x] File-based backchannel for CIBA testing
 - [x] Mock backchannel for automated testing
 - [x] Comprehensive unit tests for CIBA components
+- [x] Token endpoint implementation for CIBA
+- [x] OAuth2 token generation (access, refresh, ID tokens)
 - [ ] Integration tests with file-based backchannel
-- [ ] Token endpoint implementation for CIBA
-- [ ] Client authentication (client_secret, JWT, mTLS)
+- [ ] Enhanced client authentication (JWT, mTLS)
+- [ ] CIBA ping and push delivery modes
 - [ ] Push notification backchannel for production
 - [ ] Admin UI extensions for trust network management
 - [ ] Metrics and monitoring integration
