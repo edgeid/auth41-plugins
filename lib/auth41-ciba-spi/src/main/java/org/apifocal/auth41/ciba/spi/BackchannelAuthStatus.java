@@ -39,6 +39,7 @@ public class BackchannelAuthStatus {
     private final String authReqId;
     private final Status status;
     private final String userId;
+    private final String scope;
     private final String errorCode;
     private final String errorDescription;
     private final Instant updatedAt;
@@ -47,6 +48,7 @@ public class BackchannelAuthStatus {
         this.authReqId = Objects.requireNonNull(builder.authReqId, "authReqId must not be null");
         this.status = Objects.requireNonNull(builder.status, "status must not be null");
         this.userId = builder.userId;
+        this.scope = builder.scope;
         this.errorCode = builder.errorCode;
         this.errorDescription = builder.errorDescription;
         this.updatedAt = builder.updatedAt != null ? builder.updatedAt : Instant.now();
@@ -66,6 +68,10 @@ public class BackchannelAuthStatus {
 
     public String getUserId() {
         return userId;
+    }
+
+    public String getScope() {
+        return scope;
     }
 
     public String getErrorCode() {
@@ -117,6 +123,7 @@ public class BackchannelAuthStatus {
         private String authReqId;
         private Status status;
         private String userId;
+        private String scope;
         private String errorCode;
         private String errorDescription;
         private Instant updatedAt;
@@ -133,6 +140,11 @@ public class BackchannelAuthStatus {
 
         public Builder userId(String userId) {
             this.userId = userId;
+            return this;
+        }
+
+        public Builder scope(String scope) {
+            this.scope = scope;
             return this;
         }
 

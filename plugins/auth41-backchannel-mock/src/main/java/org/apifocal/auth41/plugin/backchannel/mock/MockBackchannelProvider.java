@@ -149,6 +149,7 @@ public class MockBackchannelProvider implements BackchannelProvider {
             .authReqId(authReqId)
             .status(status)
             .userId(userId)
+            .scope(mockRequest.request.getScope())
             .errorCode(errorCode)
             .errorDescription(errorDescription)
             .updatedAt(Instant.now())
