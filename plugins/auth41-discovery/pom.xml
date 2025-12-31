@@ -8,7 +8,7 @@
     <parent>
         <groupId>org.apifocal.auth41.plugin</groupId>
         <artifactId>auth41-plugins</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.0-alpha.2</version>
     </parent>
 
     <artifactId>auth41-discovery</artifactId>
@@ -61,14 +61,14 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apifocal.auth41</groupId>
+            <groupId>org.apifocal.auth41.plugin</groupId>
             <artifactId>auth41-trust-network</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
-            <groupId>org.apifocal.auth41</groupId>
+            <groupId>org.apifocal.auth41.plugin</groupId>
             <artifactId>auth41-topology</artifactId>
             <version>${project.version}</version>
             <scope>provided</scope>

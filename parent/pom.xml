@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.apifocal.auth41</groupId>
         <artifactId>auth41-root</artifactId>
-        <version>1.0.0-SNAPSHOT</version>
+        <version>1.0.0-alpha.2</version>
     </parent>
 
     <artifactId>auth41-parent</artifactId>
@@ -67,6 +67,52 @@
             <dependency>
                 <groupId>org.apifocal.auth41</groupId>
                 <artifactId>auth41-ciba-spi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <!-- Auth41 plugins -->
+            <dependency>
+                <groupId>org.apifocal.auth41.plugin</groupId>
+                <artifactId>auth41-accounts</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apifocal.auth41.plugin</groupId>
+                <artifactId>auth41-backchannel-file</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apifocal.auth41.plugin</groupId>
+                <artifactId>auth41-backchannel-mock</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apifocal.auth41.plugin</groupId>
+                <artifactId>auth41-ciba</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apifocal.auth41.plugin</groupId>
+                <artifactId>auth41-discovery</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apifocal.auth41.plugin</groupId>
+                <artifactId>auth41-federation-broker</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apifocal.auth41.plugin</groupId>
+                <artifactId>auth41-themes</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apifocal.auth41.plugin</groupId>
+                <artifactId>auth41-topology</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apifocal.auth41.plugin</groupId>
+                <artifactId>auth41-trust-network</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -229,6 +275,51 @@
                         </execution>
                     </executions>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.3.0</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.6.3</version>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                    <configuration>
+                        <doclint>none</doclint>
+                        <quiet>true</quiet>
+                        <source>21</source>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>3.1.0</version>
+                    <executions>
+                        <execution>
+                            <id>sign-artifacts</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>sign</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -240,6 +331,18 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
