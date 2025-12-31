@@ -36,6 +36,7 @@ public class CibaTokenGenerator {
      * @param scope Requested OAuth2 scopes (space-separated)
      * @param authReqId The CIBA authentication request ID
      * @return TokenResponse containing access_token, refresh_token, id_token, etc.
+     * @throws TokenGenerationException if token generation fails for any reason
      */
     public TokenResponse generateTokens(UserModel user, ClientModel client, String scope, String authReqId) {
         logger.debugf("Generating tokens for CIBA: user=%s, client=%s, scope=%s, authReqId=%s",
