@@ -4,7 +4,7 @@ This guide walks you through setting up and testing the CIBA (Client-Initiated B
 
 ## Prerequisites
 
-- Keycloak 23.x or later installed
+- Keycloak 26.x or later installed
 - Java 17+
 - Maven 3.8+ (for building)
 - `curl` for testing

@@ -6,11 +6,11 @@ This guide covers how to develop, extend, and contribute to Auth41 plugins.
 
 ### Prerequisites
 
-- **JDK 17 or later** - Required for Keycloak 23.x development
+- **JDK 17 or later** - Required for Keycloak 26.x development
 - **Maven 3.8+** - Build tool
 - **Git** - Version control
 - **IDE** - IntelliJ IDEA (recommended), Eclipse, or VS Code with Java extensions
-- **Keycloak 23.x** - For testing
+- **Keycloak 26.x** - For testing
 
 ### Clone Repository
 
@@ -54,7 +54,7 @@ mvn clean install -DskipTests
 mvn clean install -pl plugins/auth41-trust-network
 
 # Build with specific Keycloak version
-mvn clean install -Dkeycloak.version=23.0.5
+mvn clean install -Dkeycloak.version=26.4.7
 ```
 
 ### Run Tests
@@ -425,7 +425,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 class IntegrationTest {
 
     @Container
-    static GenericContainer<?> keycloak = new GenericContainer<>("quay.io/keycloak/keycloak:23.0")
+    static GenericContainer<?> keycloak = new GenericContainer<>("quay.io/keycloak/keycloak:26.4.7")
         .withExposedPorts(8080)
         .withEnv("KEYCLOAK_ADMIN", "admin")
         .withEnv("KEYCLOAK_ADMIN_PASSWORD", "admin")
