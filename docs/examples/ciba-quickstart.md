@@ -136,7 +136,7 @@ chmod 777 /tmp/auth41-backchannel/{inbox,outbox}
 
 ```bash
 $KEYCLOAK_HOME/bin/kc.sh start-dev \
-  --spi-backchannel-provider=file \
+  --spi-backchannel-provider=file-test-only \
   --spi-backchannel-file-base-directory=/tmp/auth41-backchannel
 ```
 
