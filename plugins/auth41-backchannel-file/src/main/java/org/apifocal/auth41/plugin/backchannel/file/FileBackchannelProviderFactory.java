@@ -18,7 +18,7 @@ import java.util.Set;
 public class FileBackchannelProviderFactory extends AbstractProviderFactory<BackchannelProvider>
         implements BackchannelProviderFactory {
 
-    private static final String PROVIDER_ID = "file";
+    private static final String PROVIDER_ID = "file-test-only";
     private static final String DEFAULT_BASE_DIR = "/var/auth41/backchannel";
     private static final String CONFIG_BASE_DIR = "baseDirectory";
 

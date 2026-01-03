@@ -70,7 +70,7 @@ public class CibaAuthenticationResource {
             String authReqId = generateAuthReqId();
 
             // 5. Get backchannel provider
-            BackchannelProvider backchannelProvider = session.getProvider(BackchannelProvider.class);
+            BackchannelProvider backchannelProvider = getBackchannelProvider();
             if (backchannelProvider == null) {
                 logger.error("No BackchannelProvider available");
                 return errorResponse("server_error", "CIBA not configured", Response.Status.INTERNAL_SERVER_ERROR);
@@ -221,6 +221,33 @@ public class CibaAuthenticationResource {
         public String getBindingMessage() { return bindingMessage; }
         public String getUserCode() { return userCode; }
         public Integer getRequestedExpiry() { return requestedExpiry; }
+    }
+
+    /**
+     * Get the configured BackchannelProvider for this realm.
+     * 
+     * Reads the realm attribute "ciba.backchannel.provider" to determine which
+     * provider to use. Falls back to "mock-test-only" if not configured.
+     * 
+     * @return the configured BackchannelProvider, or null if not available
+     */
+    private BackchannelProvider getBackchannelProvider() {
+        String providerId = realm.getAttribute("ciba.backchannel.provider");
+        
+        if (providerId == null || providerId.trim().isEmpty()) {
+            providerId = "mock-test-only";
+            logger.debugf("No CIBA backchannel provider configured for realm %s, using default: %s", realm.getName(), providerId);
+        } else {
+            logger.debugf("Using CIBA backchannel provider for realm %s: %s", realm.getName(), providerId);
+        }
+        
+        BackchannelProvider provider = session.getProvider(BackchannelProvider.class, providerId);
+        
+        if (provider == null) {
+            logger.errorf("BackchannelProvider %s not found for realm %s", providerId, realm.getName());
+        }
+        
+        return provider;
     }
 
     /**

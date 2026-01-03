@@ -82,7 +82,7 @@ class CibaAuthenticationResourceTest {
         when(client.getClientId()).thenReturn("test-client");
         when(userProvider.getUserByEmail(realm, "user@example.com")).thenReturn(user);
         when(user.getUsername()).thenReturn("testuser");
-        when(session.getProvider(BackchannelProvider.class)).thenReturn(backchannelProvider);
+        when(session.getProvider(eq(BackchannelProvider.class), any(String.class))).thenReturn(backchannelProvider);
 
         // When
         Response response = resource.authenticate(headers, formParams);
@@ -243,7 +243,7 @@ class CibaAuthenticationResourceTest {
         when(client.getClientId()).thenReturn("test-client");
         when(userProvider.getUserByUsername(realm, "testuser")).thenReturn(user);
         when(user.getUsername()).thenReturn("testuser");
-        when(session.getProvider(BackchannelProvider.class)).thenReturn(backchannelProvider);
+        when(session.getProvider(eq(BackchannelProvider.class), any(String.class))).thenReturn(backchannelProvider);
 
         // When
         Response response = resource.authenticate(headers, formParams);
@@ -266,7 +266,7 @@ class CibaAuthenticationResourceTest {
         when(userProvider.getUserByUsername(realm, "user@example.com")).thenReturn(null);
         when(userProvider.getUserByEmail(realm, "user@example.com")).thenReturn(user);
         when(user.getUsername()).thenReturn("testuser");
-        when(session.getProvider(BackchannelProvider.class)).thenReturn(backchannelProvider);
+        when(session.getProvider(eq(BackchannelProvider.class), any(String.class))).thenReturn(backchannelProvider);
 
         // When
         Response response = resource.authenticate(headers, formParams);
@@ -288,7 +288,7 @@ class CibaAuthenticationResourceTest {
         when(client.isEnabled()).thenReturn(true);
         when(client.getClientId()).thenReturn("test-client");
         when(userProvider.getUserByEmail(realm, "user@example.com")).thenReturn(user);
-        when(session.getProvider(BackchannelProvider.class)).thenReturn(backchannelProvider);
+        when(session.getProvider(eq(BackchannelProvider.class), any(String.class))).thenReturn(backchannelProvider);
 
         // When
         Response response = resource.authenticate(headers, formParams);
@@ -316,7 +316,7 @@ class CibaAuthenticationResourceTest {
         when(client.isEnabled()).thenReturn(true);
         when(client.getClientId()).thenReturn("test-client");
         when(userProvider.getUserByEmail(realm, "user@example.com")).thenReturn(user);
-        when(session.getProvider(BackchannelProvider.class)).thenReturn(backchannelProvider);
+        when(session.getProvider(eq(BackchannelProvider.class), any(String.class))).thenReturn(backchannelProvider);
 
         // When
         Response response = resource.authenticate(headers, formParams);
@@ -398,7 +398,7 @@ class CibaAuthenticationResourceTest {
         when(client.isEnabled()).thenReturn(true);
         when(client.getClientId()).thenReturn("test-client");
         when(userProvider.getUserByEmail(realm, "user@example.com")).thenReturn(user);
-        when(session.getProvider(BackchannelProvider.class)).thenReturn(backchannelProvider);
+        when(session.getProvider(eq(BackchannelProvider.class), any(String.class))).thenReturn(backchannelProvider);
 
         // When
         Response response = resource.authenticate(headers, formParams);
@@ -423,7 +423,7 @@ class CibaAuthenticationResourceTest {
         when(client.isEnabled()).thenReturn(true);
         when(client.getClientId()).thenReturn("test-client");
         when(userProvider.getUserByEmail(realm, "user@example.com")).thenReturn(user);
-        when(session.getProvider(BackchannelProvider.class)).thenReturn(backchannelProvider);
+        when(session.getProvider(eq(BackchannelProvider.class), any(String.class))).thenReturn(backchannelProvider);
 
         // When
         Response response = resource.authenticate(headers, formParams);
@@ -449,7 +449,7 @@ class CibaAuthenticationResourceTest {
         when(client.isEnabled()).thenReturn(true);
         when(client.getClientId()).thenReturn("test-client");
         when(userProvider.getUserByEmail(realm, "user@example.com")).thenReturn(user);
-        when(session.getProvider(BackchannelProvider.class)).thenReturn(backchannelProvider);
+        when(session.getProvider(eq(BackchannelProvider.class), any(String.class))).thenReturn(backchannelProvider);
 
         // When
         Response response = resource.authenticate(headers, formParams);
@@ -516,7 +516,7 @@ class CibaAuthenticationResourceTest {
         when(realm.getClientByClientId("test-client")).thenReturn(client);
         when(client.isEnabled()).thenReturn(true);
         when(userProvider.getUserByEmail(realm, "user@example.com")).thenReturn(user);
-        when(session.getProvider(BackchannelProvider.class)).thenReturn(null);
+        when(session.getProvider(eq(BackchannelProvider.class), any(String.class))).thenReturn(null);
 
         // When
         Response response = resource.authenticate(headers, formParams);
@@ -540,7 +540,7 @@ class CibaAuthenticationResourceTest {
         when(client.isEnabled()).thenReturn(true);
         when(client.getClientId()).thenReturn("test-client");
         when(userProvider.getUserByEmail(realm, "user@example.com")).thenReturn(user);
-        when(session.getProvider(BackchannelProvider.class)).thenReturn(backchannelProvider);
+        when(session.getProvider(eq(BackchannelProvider.class), any(String.class))).thenReturn(backchannelProvider);
 
         doThrow(new BackchannelException("Network error"))
             .when(backchannelProvider).initiateAuthentication(any());
@@ -587,7 +587,7 @@ class CibaAuthenticationResourceTest {
         when(client.isEnabled()).thenReturn(true);
         when(client.getClientId()).thenReturn("test-client");
         when(userProvider.getUserByEmail(realm, "user@example.com")).thenReturn(user);
-        when(session.getProvider(BackchannelProvider.class)).thenReturn(backchannelProvider);
+        when(session.getProvider(eq(BackchannelProvider.class), any(String.class))).thenReturn(backchannelProvider);
 
         // When
         Response response = resource.authenticate(headers, formParams);
@@ -612,7 +612,7 @@ class CibaAuthenticationResourceTest {
         when(client.isEnabled()).thenReturn(true);
         when(client.getClientId()).thenReturn("test-client");
         when(userProvider.getUserByEmail(realm, "user@example.com")).thenReturn(user);
-        when(session.getProvider(BackchannelProvider.class)).thenReturn(backchannelProvider);
+        when(session.getProvider(eq(BackchannelProvider.class), any(String.class))).thenReturn(backchannelProvider);
 
         // When
         Response response1 = resource.authenticate(headers, formParams);
