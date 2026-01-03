@@ -233,20 +233,20 @@ public class CibaAuthenticationResource {
      */
     private BackchannelProvider getBackchannelProvider() {
         String providerId = realm.getAttribute("ciba.backchannel.provider");
-        
+
         if (providerId == null || providerId.trim().isEmpty()) {
             providerId = "mock-test-only";
             logger.debugf("No CIBA backchannel provider configured for realm %s, using default: %s", realm.getName(), providerId);
         } else {
             logger.debugf("Using CIBA backchannel provider for realm %s: %s", realm.getName(), providerId);
         }
-        
+
         BackchannelProvider provider = session.getProvider(BackchannelProvider.class, providerId);
-        
+
         if (provider == null) {
             logger.errorf("BackchannelProvider %s not found for realm %s", providerId, realm.getName());
         }
-        
+
         return provider;
     }
 
