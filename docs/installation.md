@@ -6,7 +6,7 @@ This guide covers how to install and deploy Auth41 Keycloak plugins.
 
 Before installing Auth41, ensure you have:
 
-- **Keycloak 23.x or later** - Auth41 is built for Keycloak 23+ using the new Quarkus distribution
+- **Keycloak 26.x or later** - Auth41 is built for Keycloak 26+ using the new Quarkus distribution
 - **Java 17 or later** - Required for building from source and running Keycloak
 - **Maven 3.8+** - Required for building from source
 - **Database** - PostgreSQL, MySQL, or another Keycloak-supported database (recommended for production)
@@ -163,7 +163,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   keycloak:
-    image: quay.io/keycloak/keycloak:23.0
+    image: quay.io/keycloak/keycloak:26.4.7
     command: start-dev
     environment:
       KC_DB: postgres
@@ -201,7 +201,7 @@ docker-compose up -d
 Create a custom Keycloak image with Auth41 pre-installed:
 
 ```dockerfile
-FROM quay.io/keycloak/keycloak:23.0
+FROM quay.io/keycloak/keycloak:26.4.7
 
 # Copy Auth41 plugins
 COPY plugins/auth41-trust-network/target/auth41-trust-network.jar /opt/keycloak/providers/
@@ -237,7 +237,7 @@ Add Auth41 plugins to the Keycloak Helm chart values:
 # values.yaml
 image:
   repository: quay.io/keycloak/keycloak
-  tag: "23.0"
+  tag: "26.4.7"
 
 extraInitContainers: |
   - name: plugin-provider
@@ -364,7 +364,7 @@ To remove Auth41 plugins:
 **Solutions**:
 - Ensure all 6 plugin JARs are deployed (some plugins depend on others)
 - Verify JARs are not corrupted (re-download or rebuild)
-- Check Keycloak version compatibility (requires 23.x+)
+- Check Keycloak version compatibility (requires 26.x+)
 
 ### Trust Network Not Loading
 
