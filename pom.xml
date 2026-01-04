@@ -43,9 +43,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:https://github.com/apifocal/auth41-plugins.git</connection>
-        <developerConnection>scm:git:https://github.com/apifocal/auth41-plugins.git</developerConnection>
-        <url>https://github.com/apifocal/auth41-plugins</url>
+        <connection>scm:git:git@github.com:edgeid/auth41-plugins.git</connection>
+        <developerConnection>scm:git:git@github.com:edgeid/auth41-plugins.git</developerConnection>
+        <url>https://github.com/edgeid/auth41-plugins</url>
         <tag>HEAD</tag>
     </scm>
 
@@ -63,6 +63,18 @@
                         <waitUntil>uploaded</waitUntil>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-release-plugin</artifactId>
+                    <version>3.0.1</version>
+                    <configuration>
+                        <tagNameFormat>v@{project.version}</tagNameFormat>
+                        <autoVersionSubmodules>true</autoVersionSubmodules>
+                        <useReleaseProfile>false</useReleaseProfile>
+                        <releaseProfiles>release</releaseProfiles>
+                        <goals>deploy</goals>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
         <plugins>
@@ -70,6 +82,10 @@
                 <groupId>org.sonatype.central</groupId>
                 <artifactId>central-publishing-maven-plugin</artifactId>
                 <extensions>true</extensions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
@@ -93,6 +109,12 @@
                                 </goals>
                             </execution>
                         </executions>
+                        <configuration>
+                            <gpgArguments>
+                                <arg>--pinentry-mode</arg>
+                                <arg>loopback</arg>
+                            </gpgArguments>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
