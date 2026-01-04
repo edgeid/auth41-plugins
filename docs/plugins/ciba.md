@@ -88,7 +88,7 @@ $KEYCLOAK_HOME/bin/kc.sh build
 
 ```bash
 $KEYCLOAK_HOME/bin/kc.sh start-dev \
-  --spi-backchannel-provider=file \
+  --spi-backchannel-provider=file-test-only \
   --spi-backchannel-file-base-directory=/var/auth41/backchannel
 ```
 
@@ -333,16 +333,95 @@ See [Mock Backchannel README](../../plugins/auth41-backchannel-mock/README.md) f
 
 ## Configuration
 
-### Backchannel Provider Selection
+### Global Backchannel Provider Selection
 
-Keycloak will use the first available BackchannelProvider. To specify a particular provider:
+You can configure a default backchannel provider globally for all realms:
 
 ```bash
 # Use file-based backchannel (manual testing)
---spi-backchannel-provider=file
+--spi-backchannel-provider=file-test-only
 
 # Use mock backchannel (automated testing)
 --spi-backchannel-provider=mock-test-only
+```
+
+**Note**: As of version 1.0.0-SNAPSHOT, the provider IDs have been renamed for clarity:
+- `file` → `file-test-only`
+- `mock-test-only` (unchanged)
+
+### Per-Realm Backchannel Provider Selection
+
+Starting with version 1.0.0-SNAPSHOT, you can configure different backchannel providers for different realms using realm attributes. This allows testing with mock providers in development realms while using production providers in production realms.
+
+**Via Admin Console**:
+
+1. Navigate to: **Realm Settings** → **General** → **Attributes**
+2. Click **Add attribute**
+3. Set:
+   - **Key**: `ciba.backchannel.provider`
+   - **Value**: `mock-test-only` (or `file-test-only`, or your production provider ID)
+4. Click **Save**
+
+**Via Realm Import JSON**:
+
+```json
+{
+  "realm": "test-realm",
+  "enabled": true,
+  "attributes": {
+    "ciba.backchannel.provider": "mock-test-only"
+  }
+}
+```
+
+**Default Behavior**:
+
+If the `ciba.backchannel.provider` attribute is not set, the CIBA plugin falls back to `mock-test-only` as the default. This ensures CIBA works out-of-the-box for testing without additional configuration.
+
+**Example: Multi-Realm Setup**
+
+* Development realm - uses mock for fast testing
+```json
+{
+  "realm": "dev",
+  "attributes": {
+    "ciba.backchannel.provider": "mock-test-only"
+  }
+}
+```
+
+* Integration realm - uses file-based for manual testing
+```json
+{
+  "realm": "integration",
+  "attributes": {
+    "ciba.backchannel.provider": "file-test-only"
+  }
+}
+```
+
+* Production realm - using push notifications (future - not yet implemented)
+```json
+{
+  "realm": "production",
+  "attributes": {
+    "ciba.backchannel.provider": "push-notifications"
+  }
+}
+```
+
+**Logging**:
+
+When a CIBA authentication request is initiated, the plugin logs which provider is being used:
+
+```
+DEBUG: Using CIBA backchannel provider for realm test-realm: mock-test-only
+```
+
+If no provider is configured:
+
+```
+DEBUG: No CIBA backchannel provider configured for realm test-realm, using default: mock-test-only
 ```
 
 ### File Backchannel Configuration
@@ -353,7 +432,7 @@ Keycloak will use the first available BackchannelProvider. To specify a particul
 
 # Example with all options
 $KEYCLOAK_HOME/bin/kc.sh start \
-  --spi-backchannel-provider=file \
+  --spi-backchannel-provider=file-test-only \
   --spi-backchannel-file-base-directory=/var/auth41/backchannel
 ```
 

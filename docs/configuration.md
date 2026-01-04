@@ -333,6 +333,46 @@ Use realm attributes for dynamic selection:
    - **Key**: `auth41.theme.client.{client-id}`
    - **Value**: `auth41-classic`
 
+### CIBA Configuration
+
+Configure CIBA (Client-Initiated Backchannel Authentication) per realm:
+
+#### Select Backchannel Provider
+
+Starting with version 1.0.0-SNAPSHOT, you can configure different backchannel providers for different realms:
+
+1. Navigate to **Realm Settings** → **General** → **Attributes**
+2. Click **Add attribute**
+3. Configure:
+   - **Key**: `ciba.backchannel.provider`
+   - **Value**: `mock-test-only` (or `file-test-only`, or your production provider ID)
+4. Click **Save**
+
+**Available Providers**:
+
+| Provider ID | Description | Use Case |
+|------------|-------------|----------|
+| `mock-test-only` | Automated mock provider with configurable delays | Development and automated testing |
+| `file-test-only` | File-based inbox/outbox pattern | Manual testing and integration testing |
+| `push-notifications` | Push notification provider (future) | Production deployments |
+
+**Default Behavior**: If not configured, the CIBA plugin defaults to `mock-test-only` for ease of testing.
+
+**Example Multi-Environment Setup**:
+
+```
+Development Realm:
+  ciba.backchannel.provider = mock-test-only
+
+Staging Realm:
+  ciba.backchannel.provider = file-test-only
+
+Production Realm:
+  ciba.backchannel.provider = push-notifications
+```
+
+See [CIBA Plugin Documentation](plugins/ciba.md) for complete configuration options and usage examples.
+
 #### User-Specific Themes
 
 Set theme in user attributes:
