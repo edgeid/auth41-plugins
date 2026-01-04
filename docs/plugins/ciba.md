@@ -380,24 +380,28 @@ If the `ciba.backchannel.provider` attribute is not set, the CIBA plugin falls b
 
 **Example: Multi-Realm Setup**
 
+* Development realm - uses mock for fast testing
 ```json
-// Development realm - uses mock for fast testing
 {
   "realm": "dev",
   "attributes": {
     "ciba.backchannel.provider": "mock-test-only"
   }
 }
+```
 
-// Integration realm - uses file-based for manual testing
+* Integration realm - uses file-based for manual testing
+```json
 {
   "realm": "integration",
   "attributes": {
     "ciba.backchannel.provider": "file-test-only"
   }
 }
+```
 
-// Production realm - uses push notifications (future)
+* Production realm - using push notifications (future - not yet implemented)
+```json
 {
   "realm": "production",
   "attributes": {
