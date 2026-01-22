@@ -11,6 +11,7 @@ import org.keycloak.connections.jpa.JpaConnectionProvider;
 import org.keycloak.models.KeycloakSession;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -153,7 +154,7 @@ public class JpaRegistrationStorageProvider implements RegistrationStorageProvid
 
         // Update fields
         entity.setEmail(request.getEmail());
-        entity.setAttributes(request.getAttributes());
+        entity.setAttributes(new HashMap<>(request.getAttributes()));
         entity.setStatus(request.getStatus());
         entity.setApprovedAt(request.getApprovedAt());
         entity.setUserId(request.getUserId());
