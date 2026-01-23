@@ -94,4 +94,24 @@ public interface RegistrationStorageProvider extends Provider {
      * @return List of pending registration requests
      */
     List<RegistrationRequest> getPendingRequests(Instant olderThan);
+
+    // Cleanup operations
+
+    /**
+     * Delete expired invite tokens.
+     * Used by cleanup task to prevent database bloat.
+     *
+     * @param expiredBefore Delete tokens that expired before this instant
+     * @return Number of tokens deleted
+     */
+    int deleteExpiredInviteTokens(Instant expiredBefore);
+
+    /**
+     * Delete expired registration requests.
+     * Used by cleanup task to prevent database bloat.
+     *
+     * @param expiredBefore Delete requests that expired before this instant
+     * @return Number of requests deleted
+     */
+    int deleteExpiredRegistrationRequests(Instant expiredBefore);
 }

@@ -211,6 +211,46 @@ class RegistrationApprovalProcessorTest {
     }
 
     @Test
+    void shouldMarkAsErrorWhenUserCreatedConcurrently() {
+        // Given - simulates race condition where user doesn't exist initially
+        // but is created by another thread before this one completes
+        RegistrationRequest request = RegistrationRequest.builder()
+                .requestId("test-request")
+                .email("concurrent@example.com")
+                .realmId("test-realm")
+                .attributes(new HashMap<>())
+                .status(RegistrationRequest.Status.PENDING)
+                .createdAt(Instant.now().minusSeconds(60))
+                .expiresAt(Instant.now().plusSeconds(600))
+                .build();
+
+        when(storage.getPendingRequests(any(Instant.class))).thenReturn(List.of(request));
+
+        UserModel existingUser = mock(UserModel.class);
+
+        // First check returns null (user doesn't exist yet)
+        // After failed creation, second check returns the concurrently created user
+        when(userProvider.getUserByEmail(realm, "concurrent@example.com"))
+                .thenReturn(null)
+                .thenReturn(existingUser);
+
+        // addUser throws exception (duplicate username/email)
+        when(userProvider.addUser(realm, "concurrent@example.com"))
+                .thenThrow(new RuntimeException("User with username 'concurrent@example.com' already exists"));
+
+        // When
+        int processed = processor.processPendingRequests();
+
+        // Then
+        assertThat(processed).isEqualTo(1);
+        verify(userProvider).addUser(realm, "concurrent@example.com");
+        verify(storage).updateRegistrationRequest(argThat(req ->
+                req.getRequestId().equals("test-request") &&
+                req.getStatus() == RegistrationRequest.Status.ERROR
+        ));
+    }
+
+    @Test
     void shouldMarkAsErrorWhenRealmNotFound() {
         // Given
         RegistrationRequest request = RegistrationRequest.builder()

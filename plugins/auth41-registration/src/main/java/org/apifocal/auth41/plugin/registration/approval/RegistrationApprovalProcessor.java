@@ -5,7 +5,6 @@ import org.apifocal.auth41.plugin.registration.model.RegistrationRequest;
 import org.apifocal.auth41.plugin.registration.storage.RegistrationStorageProvider;
 import org.jboss.logging.Logger;
 import org.keycloak.models.*;
-import org.keycloak.models.utils.KeycloakModelUtils;
 
 import java.time.Instant;
 import java.util.List;
@@ -106,8 +105,22 @@ public class RegistrationApprovalProcessor {
             return;
         }
 
-        // Create user
-        UserModel user = createUser(realm, request);
+        // Create user - handle race condition where user might be created concurrently
+        UserModel user;
+        try {
+            user = createUser(realm, request);
+        } catch (Exception e) {
+            // Check if user was created by another concurrent request
+            UserModel existingUser = session.users().getUserByEmail(realm, request.getEmail());
+            if (existingUser != null) {
+                logger.warnf("User with email %s was created concurrently, marking request as error",
+                        request.getEmail());
+                markRequestAsError(request, storage, "User already exists");
+                return;
+            }
+            // If not a duplicate user error, rethrow
+            throw e;
+        }
 
         // Update request status to approved
         RegistrationRequest approved = RegistrationRequest.builder()

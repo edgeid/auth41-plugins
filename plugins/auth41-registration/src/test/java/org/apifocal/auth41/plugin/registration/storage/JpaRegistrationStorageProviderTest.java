@@ -2,6 +2,7 @@ package org.apifocal.auth41.plugin.registration.storage;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
+import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import org.apifocal.auth41.plugin.registration.entity.InviteTokenEntity;
 import org.apifocal.auth41.plugin.registration.entity.RegistrationRequestEntity;
@@ -205,6 +206,26 @@ class JpaRegistrationStorageProviderTest {
         assertThatThrownBy(() -> provider.markInviteTokenUsed("nonexistent"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("not found");
+
+        verify(em, never()).merge(any());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenMarkInviteTokenAlreadyUsed() {
+        InviteTokenEntity entity = new InviteTokenEntity(
+                "test-token",
+                "192.168.1.1",
+                "test-realm",
+                Instant.now().plus(5, ChronoUnit.MINUTES)
+        );
+        entity.setUsed(true);
+        entity.setUsedAt(Instant.now());
+
+        when(em.find(InviteTokenEntity.class, "test-token")).thenReturn(entity);
+
+        assertThatThrownBy(() -> provider.markInviteTokenUsed("test-token"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("already used");
 
         verify(em, never()).merge(any());
     }
@@ -422,5 +443,61 @@ class JpaRegistrationStorageProviderTest {
         List<RegistrationRequest> requests = provider.getPendingRequests(Instant.now());
 
         assertThat(requests).isEmpty();
+    }
+
+    @Test
+    void shouldDeleteExpiredInviteTokens() {
+        Instant expiredBefore = Instant.now();
+        Query query = mock(Query.class);
+        when(em.createQuery("DELETE FROM InviteTokenEntity i WHERE i.expiresAt < :expiredBefore"))
+                .thenReturn(query);
+        when(query.executeUpdate()).thenReturn(5);
+
+        int deleted = provider.deleteExpiredInviteTokens(expiredBefore);
+
+        assertThat(deleted).isEqualTo(5);
+        verify(query).setParameter("expiredBefore", expiredBefore);
+        verify(query).executeUpdate();
+    }
+
+    @Test
+    void shouldDeleteExpiredRegistrationRequests() {
+        Instant expiredBefore = Instant.now();
+        Query query = mock(Query.class);
+        when(em.createQuery("DELETE FROM RegistrationRequestEntity r WHERE r.expiresAt < :expiredBefore"))
+                .thenReturn(query);
+        when(query.executeUpdate()).thenReturn(3);
+
+        int deleted = provider.deleteExpiredRegistrationRequests(expiredBefore);
+
+        assertThat(deleted).isEqualTo(3);
+        verify(query).setParameter("expiredBefore", expiredBefore);
+        verify(query).executeUpdate();
+    }
+
+    @Test
+    void shouldReturnZeroWhenNoExpiredTokensToDelete() {
+        Instant expiredBefore = Instant.now();
+        Query query = mock(Query.class);
+        when(em.createQuery("DELETE FROM InviteTokenEntity i WHERE i.expiresAt < :expiredBefore"))
+                .thenReturn(query);
+        when(query.executeUpdate()).thenReturn(0);
+
+        int deleted = provider.deleteExpiredInviteTokens(expiredBefore);
+
+        assertThat(deleted).isEqualTo(0);
+    }
+
+    @Test
+    void shouldReturnZeroWhenNoExpiredRequestsToDelete() {
+        Instant expiredBefore = Instant.now();
+        Query query = mock(Query.class);
+        when(em.createQuery("DELETE FROM RegistrationRequestEntity r WHERE r.expiresAt < :expiredBefore"))
+                .thenReturn(query);
+        when(query.executeUpdate()).thenReturn(0);
+
+        int deleted = provider.deleteExpiredRegistrationRequests(expiredBefore);
+
+        assertThat(deleted).isEqualTo(0);
     }
 }

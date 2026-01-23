@@ -80,7 +80,7 @@ public class InviteResource {
             Instant rateLimitWindow = Instant.now().minusSeconds(config.getRateLimitWindowSeconds());
             long recentInvites = storage.countRecentInvitesByIp(ipAddress, rateLimitWindow);
 
-            if (recentInvites >= 3) {
+            if (recentInvites >= config.getRateLimitMaxInvites()) {
                 logger.warnf("Rate limit exceeded for IP %s: %d invites in window", ipAddress, recentInvites);
                 return Response.status(Response.Status.TOO_MANY_REQUESTS)
                         .entity(Map.of(
@@ -126,13 +126,42 @@ public class InviteResource {
     /**
      * Get client IP address from request context.
      *
-     * @return IP address or null if not available
+     * <p>This method retrieves the client IP address using Keycloak's ClientConnection,
+     * which automatically handles X-Forwarded-For headers when Keycloak is properly
+     * configured for reverse proxy environments.
+     *
+     * <p><strong>Important for Production Deployment:</strong>
+     * <ul>
+     *   <li>Keycloak must be started with proxy mode: {@code --proxy edge} or {@code --proxy reencrypt}</li>
+     *   <li>This enables Keycloak to trust X-Forwarded-For, X-Forwarded-Proto, and X-Forwarded-Host headers</li>
+     *   <li>Without proper proxy configuration, all requests will appear to come from the proxy's IP</li>
+     *   <li>This breaks rate limiting as all clients will be treated as a single IP address</li>
+     * </ul>
+     *
+     * <p>Example Keycloak startup:
+     * <pre>
+     * bin/kc.sh start --proxy edge --hostname=auth.example.com
+     * </pre>
+     *
+     * <p>For more details, see:
+     * <a href="https://www.keycloak.org/server/reverseproxy">Keycloak Reverse Proxy Documentation</a>
+     *
+     * @return Client IP address, or null if not available
      */
     private String getClientIpAddress() {
-        // Try to get IP from Keycloak session context
+        // Keycloak's ClientConnection.getRemoteAddr() handles X-Forwarded-For automatically
+        // when proxy mode is configured. The order of precedence is:
+        // 1. X-Forwarded-For header (first non-private IP if proxy mode enabled)
+        // 2. Direct connection remote address
         if (session.getContext().getConnection() != null) {
-            return session.getContext().getConnection().getRemoteAddr();
+            String remoteAddr = session.getContext().getConnection().getRemoteAddr();
+            if (remoteAddr != null && !remoteAddr.isEmpty()) {
+                return remoteAddr;
+            }
         }
+
+        // This should rarely happen - log warning for debugging
+        logger.warn("Could not determine client IP address from connection context");
         return null;
     }
 }

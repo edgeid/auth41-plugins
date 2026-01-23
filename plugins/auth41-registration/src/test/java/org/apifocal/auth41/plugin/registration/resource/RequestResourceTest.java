@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.keycloak.models.*;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -331,6 +332,10 @@ class RequestResourceTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> body = (Map<String, Object>) response.getEntity();
         assertThat(body.get("error")).isEqualTo("server_error");
+        assertThat(body.get("error_description")).asString()
+                .isEqualTo("An internal error occurred. Please try again later.");
+        // Verify that internal exception message is NOT exposed
+        assertThat(body.get("error_description")).asString().doesNotContain("Database error");
     }
 
     @Test
@@ -390,6 +395,133 @@ class RequestResourceTest {
     }
 
     @Test
+    void shouldReturnBadRequestWhenTooManyAttributes() {
+        // Given
+        Map<String, Object> request = new HashMap<>();
+        request.put("invite_token", "valid-token");
+        request.put("email", "test@example.com");
+
+        // Create 51 attributes (exceeds limit of 50)
+        Map<String, Object> attributes = new HashMap<>();
+        for (int i = 0; i < 51; i++) {
+            attributes.put("attr" + i, "value" + i);
+        }
+        request.put("attributes", attributes);
+
+        // When
+        Response response = resource.submitRegistrationRequest(request);
+
+        // Then
+        assertThat(response.getStatus()).isEqualTo(400);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getEntity();
+        assertThat(body.get("error")).isEqualTo("invalid_request");
+        assertThat(body.get("error_description")).asString().contains("Too many attributes");
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenAttributeValueTooLong() {
+        // Given
+        Map<String, Object> request = new HashMap<>();
+        request.put("invite_token", "valid-token");
+        request.put("email", "test@example.com");
+
+        Map<String, Object> attributes = new HashMap<>();
+        // Create a value with 1001 characters (exceeds limit of 1000)
+        attributes.put("longValue", "x".repeat(1001));
+        request.put("attributes", attributes);
+
+        // When
+        Response response = resource.submitRegistrationRequest(request);
+
+        // Then
+        assertThat(response.getStatus()).isEqualTo(400);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getEntity();
+        assertThat(body.get("error")).isEqualTo("invalid_request");
+        assertThat(body.get("error_description")).asString().contains("Attribute value too long");
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenAttributeNameTooLong() {
+        // Given
+        Map<String, Object> request = new HashMap<>();
+        request.put("invite_token", "valid-token");
+        request.put("email", "test@example.com");
+
+        Map<String, Object> attributes = new HashMap<>();
+        // Create a key with 101 characters (exceeds limit of 100)
+        attributes.put("x".repeat(101), "value");
+        request.put("attributes", attributes);
+
+        // When
+        Response response = resource.submitRegistrationRequest(request);
+
+        // Then
+        assertThat(response.getStatus()).isEqualTo(400);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getEntity();
+        assertThat(body.get("error")).isEqualTo("invalid_request");
+        assertThat(body.get("error_description")).asString().contains("Attribute name too long");
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenAttributeNameEmpty() {
+        // Given
+        Map<String, Object> request = new HashMap<>();
+        request.put("invite_token", "valid-token");
+        request.put("email", "test@example.com");
+
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("", "value");
+        request.put("attributes", attributes);
+
+        // When
+        Response response = resource.submitRegistrationRequest(request);
+
+        // Then
+        assertThat(response.getStatus()).isEqualTo(400);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getEntity();
+        assertThat(body.get("error")).isEqualTo("invalid_request");
+        assertThat(body.get("error_description")).asString().contains("Attribute name cannot be empty");
+    }
+
+    @Test
+    void shouldAcceptValidAttributesAtLimits() {
+        // Given
+        String inviteTokenValue = "valid-token";
+        InviteToken inviteToken = InviteToken.builder()
+                .inviteToken(inviteTokenValue)
+                .ipAddress("192.168.1.1")
+                .realmId("test-realm")
+                .expiresAt(Instant.now().plus(5, ChronoUnit.MINUTES))
+                .build();
+
+        when(storage.getInviteToken(inviteTokenValue)).thenReturn(inviteToken);
+        when(userProvider.getUserByEmail(realm, "test@example.com")).thenReturn(null);
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("invite_token", inviteTokenValue);
+        request.put("email", "test@example.com");
+
+        // Create exactly 50 attributes with one at max length
+        Map<String, Object> attributes = new HashMap<>();
+        for (int i = 0; i < 49; i++) {
+            attributes.put("attr" + i, "value" + i);
+        }
+        // Add one attribute with max lengths (100 char key, 1000 char value)
+        attributes.put("x".repeat(100), "x".repeat(1000));
+        request.put("attributes", attributes);
+
+        // When
+        Response response = resource.submitRegistrationRequest(request);
+
+        // Then
+        assertThat(response.getStatus()).isEqualTo(201);
+    }
+
+    @Test
     void shouldReturnBadRequestWhenRealmIsMissing() {
         // Given
         when(context.getRealm()).thenReturn(null);
@@ -406,5 +538,42 @@ class RequestResourceTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> body = (Map<String, Object>) response.getEntity();
         assertThat(body.get("error")).isEqualTo("invalid_realm");
+    }
+
+    @Test
+    void shouldReturnBadRequestWhenTokenMarkedUsedConcurrently() {
+        // Given - simulate race condition where token appears valid but gets marked used
+        // by another concurrent request before we can mark it
+        InviteToken validToken = InviteToken.builder()
+                .inviteToken("concurrent-token")
+                .ipAddress("192.168.1.1")
+                .realmId("test-realm")
+                .createdAt(Instant.now())
+                .expiresAt(Instant.now().plusSeconds(300))
+                .used(false)
+                .build();
+
+        when(storage.getInviteToken("concurrent-token")).thenReturn(validToken);
+        // Simulate concurrent usage - markInviteTokenUsed throws because another request got there first
+        doThrow(new IllegalStateException("Invite token already used: concurrent-token"))
+                .when(storage).markInviteTokenUsed("concurrent-token");
+
+        Map<String, Object> request = new HashMap<>();
+        request.put("invite_token", "concurrent-token");
+        request.put("email", "test@example.com");
+        request.put("attributes", Map.of("firstName", "Test"));
+
+        // When
+        Response response = resource.submitRegistrationRequest(request);
+
+        // Then
+        assertThat(response.getStatus()).isEqualTo(400);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> body = (Map<String, Object>) response.getEntity();
+        assertThat(body.get("error")).isEqualTo("invalid_token");
+        assertThat(body.get("error_description")).asString().contains("already used");
+
+        // Verify we never created a registration request
+        verify(storage, never()).createRegistrationRequest(any());
     }
 }

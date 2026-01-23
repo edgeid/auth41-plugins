@@ -76,10 +76,10 @@ public class RegistrationRequest {
     }
 
     /**
-     * @return User profile attributes (defensive copy)
+     * @return User profile attributes (unmodifiable map)
      */
     public Map<String, Object> getAttributes() {
-        return Collections.unmodifiableMap(new HashMap<>(attributes));
+        return attributes;
     }
 
     /**

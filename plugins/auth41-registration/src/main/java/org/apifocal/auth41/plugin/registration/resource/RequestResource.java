@@ -100,6 +100,14 @@ public class RequestResource {
                 attributes = new HashMap<>();
             }
 
+            // Validate attributes size and content
+            String attributeError = validateAttributes(attributes);
+            if (attributeError != null) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "invalid_request", "error_description", attributeError))
+                        .build();
+            }
+
             // Validate invite token
             RegistrationStorageProvider storage = session.getProvider(RegistrationStorageProvider.class);
             InviteToken inviteToken = storage.getInviteToken(inviteTokenValue);
@@ -122,6 +130,19 @@ public class RequestResource {
                 logger.warnf("Invite token expired: %s", inviteTokenValue);
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity(Map.of("error", "expired_token", "error_description", "Invite token has expired"))
+                        .build();
+            }
+
+            // Mark invite token as used BEFORE creating registration request
+            // This prevents race condition where two concurrent requests could both pass
+            // the isUsed() check and create duplicate registration requests.
+            // If token is already used, this will throw IllegalStateException.
+            try {
+                storage.markInviteTokenUsed(inviteTokenValue);
+            } catch (IllegalStateException e) {
+                logger.warnf("Invite token already used (concurrent request): %s", inviteTokenValue);
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "invalid_token", "error_description", "Invite token already used"))
                         .build();
             }
 
@@ -150,9 +171,6 @@ public class RequestResource {
 
             storage.createRegistrationRequest(registrationRequest);
 
-            // Mark invite token as used
-            storage.markInviteTokenUsed(inviteTokenValue);
-
             logger.infof("Created registration request %s for email %s in realm %s",
                     requestId, email, realm.getName());
 
@@ -165,14 +183,28 @@ public class RequestResource {
             return Response.status(Response.Status.CREATED).entity(response).build();
 
         } catch (IllegalArgumentException e) {
+            // Log full exception details internally for debugging
             logger.error("Invalid registration request", e);
+
+            // Return sanitized error message to client
+            // Do not expose internal exception messages that could leak sensitive information
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(Map.of("error", "invalid_request", "error_description", e.getMessage()))
+                    .entity(Map.of(
+                            "error", "invalid_request",
+                            "error_description", "The registration request is invalid. Please check your input."
+                    ))
                     .build();
         } catch (Exception e) {
+            // Log full exception details internally for debugging
             logger.error("Error processing registration request", e);
+
+            // Return generic error message to client
+            // Do not expose stack traces or internal error details
             return Response.status(Response.Status.INTERNAL_SERVER_ERROR)
-                    .entity(Map.of("error", "server_error"))
+                    .entity(Map.of(
+                            "error", "server_error",
+                            "error_description", "An internal error occurred. Please try again later."
+                    ))
                     .build();
         }
     }
@@ -185,5 +217,53 @@ public class RequestResource {
      */
     private boolean isValidEmail(String email) {
         return email != null && email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$");
+    }
+
+    /**
+     * Validate attributes map to prevent DoS attacks.
+     *
+     * <p>Limits:
+     * <ul>
+     *   <li>Maximum 50 attributes</li>
+     *   <li>Maximum 1000 characters per attribute value</li>
+     *   <li>Maximum 100 characters per attribute name</li>
+     * </ul>
+     *
+     * @param attributes Attributes map to validate
+     * @return Error message if invalid, null if valid
+     */
+    private String validateAttributes(Map<String, Object> attributes) {
+        if (attributes == null) {
+            return null;
+        }
+
+        // Limit number of attributes to prevent memory exhaustion
+        if (attributes.size() > 50) {
+            return "Too many attributes (maximum 50)";
+        }
+
+        // Validate each attribute
+        for (Map.Entry<String, Object> entry : attributes.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+
+            // Validate key length
+            if (key == null || key.isEmpty()) {
+                return "Attribute name cannot be empty";
+            }
+            if (key.length() > 100) {
+                return "Attribute name too long (maximum 100 characters)";
+            }
+
+            // Validate value
+            if (value != null) {
+                String valueStr = String.valueOf(value);
+                if (valueStr.length() > 1000) {
+                    return "Attribute value too long (maximum 1000 characters)";
+                }
+            }
+        }
+
+        return null;
     }
 }

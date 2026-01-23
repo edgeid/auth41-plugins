@@ -1,6 +1,7 @@
 package org.apifocal.auth41.plugin.registration.storage;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
 import org.apifocal.auth41.plugin.registration.entity.InviteTokenEntity;
 import org.apifocal.auth41.plugin.registration.entity.RegistrationRequestEntity;
@@ -96,6 +97,11 @@ public class JpaRegistrationStorageProvider implements RegistrationStorageProvid
             throw new IllegalArgumentException("Invite token not found: " + inviteToken);
         }
 
+        // Check if already used to prevent race condition
+        if (entity.isUsed()) {
+            throw new IllegalStateException("Invite token already used: " + inviteToken);
+        }
+
         entity.setUsed(true);
         entity.setUsedAt(Instant.now());
         em.merge(entity);
@@ -184,6 +190,26 @@ public class JpaRegistrationStorageProvider implements RegistrationStorageProvid
         return query.getResultList().stream()
                 .map(RegistrationRequestEntity::toRegistrationRequest)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public int deleteExpiredInviteTokens(Instant expiredBefore) {
+        // Delete tokens that have expired before the given instant
+        Query query = em.createQuery(
+                "DELETE FROM InviteTokenEntity i WHERE i.expiresAt < :expiredBefore"
+        );
+        query.setParameter("expiredBefore", expiredBefore);
+        return query.executeUpdate();
+    }
+
+    @Override
+    public int deleteExpiredRegistrationRequests(Instant expiredBefore) {
+        // Delete requests that have expired before the given instant
+        Query query = em.createQuery(
+                "DELETE FROM RegistrationRequestEntity r WHERE r.expiresAt < :expiredBefore"
+        );
+        query.setParameter("expiredBefore", expiredBefore);
+        return query.executeUpdate();
     }
 
     @Override
