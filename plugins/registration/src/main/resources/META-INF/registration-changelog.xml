@@ -46,7 +46,7 @@
             <column name="realm_id" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="attributes" type="TEXT"/>
+            <column name="attributes" type="CLOB"/>
             <column name="status" type="VARCHAR(50)">
                 <constraints nullable="false"/>
             </column>

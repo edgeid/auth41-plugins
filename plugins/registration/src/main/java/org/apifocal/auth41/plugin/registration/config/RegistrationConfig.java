@@ -18,6 +18,7 @@ import org.keycloak.Config;
  *   <li>polling-interval-seconds - Recommended polling interval (default: 5 seconds)</li>
  *   <li>approval-task-interval-seconds - Approval processor task interval (default: 10 seconds)</li>
  *   <li>cleanup-task-interval-seconds - Cleanup task interval for expired records (default: 3600 = 1 hour)</li>
+ *   <li>enable-test-endpoints - Enable test/admin endpoints like /test/clear (default: false, SECURITY: set to true only in dev/test)</li>
  * </ul>
  *
  * <p>Example system properties:
@@ -25,6 +26,7 @@ import org.keycloak.Config;
  * -Dspi-realm-resource-registration-invite-ttl-seconds=600
  * -Dspi-realm-resource-registration-approval-delay-seconds=60
  * -Dspi-realm-resource-registration-rate-limit-max-invites=5
+ * -Dspi-realm-resource-registration-enable-test-endpoints=true  # ONLY in dev/test!
  * </pre>
  */
 public class RegistrationConfig {
@@ -49,6 +51,7 @@ public class RegistrationConfig {
     private final int pollingIntervalSeconds;
     private final int approvalTaskIntervalSeconds;
     private final int cleanupTaskIntervalSeconds;
+    private final boolean enableTestEndpoints;
 
     /**
      * Create configuration from Keycloak Config.Scope.
@@ -79,6 +82,7 @@ public class RegistrationConfig {
             this.pollingIntervalSeconds = config.getInt("polling-interval-seconds", DEFAULT_POLLING_INTERVAL_SECONDS);
             this.approvalTaskIntervalSeconds = config.getInt("approval-task-interval-seconds", DEFAULT_APPROVAL_TASK_INTERVAL_SECONDS);
             this.cleanupTaskIntervalSeconds = config.getInt("cleanup-task-interval-seconds", DEFAULT_CLEANUP_TASK_INTERVAL_SECONDS);
+            this.enableTestEndpoints = config.getBoolean("enable-test-endpoints", false);
         } else {
             // Use defaults (for testing or when config is not available)
             this.inviteTtlSeconds = DEFAULT_INVITE_TTL_SECONDS;
@@ -89,6 +93,7 @@ public class RegistrationConfig {
             this.pollingIntervalSeconds = DEFAULT_POLLING_INTERVAL_SECONDS;
             this.approvalTaskIntervalSeconds = DEFAULT_APPROVAL_TASK_INTERVAL_SECONDS;
             this.cleanupTaskIntervalSeconds = DEFAULT_CLEANUP_TASK_INTERVAL_SECONDS;
+            this.enableTestEndpoints = true; // Allow in tests when config is null
         }
 
         logConfiguration();
@@ -104,6 +109,9 @@ public class RegistrationConfig {
         logger.infof("  Polling interval: %d seconds", pollingIntervalSeconds);
         logger.infof("  Approval task interval: %d seconds", approvalTaskIntervalSeconds);
         logger.infof("  Cleanup task interval: %d seconds", cleanupTaskIntervalSeconds);
+        if (enableTestEndpoints) {
+            logger.warn("  Test endpoints ENABLED - this should only be used in development/test environments!");
+        }
     }
 
     /**
@@ -160,6 +168,13 @@ public class RegistrationConfig {
      */
     public int getCleanupTaskIntervalSeconds() {
         return cleanupTaskIntervalSeconds;
+    }
+
+    /**
+     * @return Whether test endpoints are enabled (should be false in production)
+     */
+    public boolean isTestEndpointsEnabled() {
+        return enableTestEndpoints;
     }
 
     @Override

@@ -12,10 +12,16 @@ import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.models.utils.KeycloakModelUtils;
 
 import jakarta.persistence.EntityManager;
+import liquibase.Contexts;
+import liquibase.Liquibase;
+import liquibase.database.Database;
+import liquibase.database.DatabaseFactory;
+import liquibase.database.jvm.JdbcConnection;
+import liquibase.resource.ClassLoaderResourceAccessor;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
-import java.sql.Statement;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -35,6 +41,10 @@ public class JpaRegistrationStorageProviderFactory
     // Track initialization to prevent duplicate execution
     private static final AtomicBoolean initialized = new AtomicBoolean(false);
 
+    // Track initialization state - null means not yet attempted, true means success, false means failure
+    private static volatile Boolean initializationSuccessful = null;
+    private static volatile String initializationError = null;
+
     // Table names to check
     private static final String[] REQUIRED_TABLES = {
         "auth41_invite_tokens",
@@ -43,6 +53,13 @@ public class JpaRegistrationStorageProviderFactory
 
     @Override
     public RegistrationStorageProvider create(KeycloakSession session) {
+        // Fail fast if initialization failed
+        if (Boolean.FALSE.equals(initializationSuccessful)) {
+            throw new IllegalStateException(
+                "Auth41 Registration Storage Provider is not available due to initialization failure: " +
+                initializationError
+            );
+        }
         return new JpaRegistrationStorageProvider(session);
     }
 
@@ -70,43 +87,82 @@ public class JpaRegistrationStorageProviderFactory
     }
 
     /**
+     * Check if initialization was successful.
+     * Can be used for health checks or monitoring.
+     *
+     * @return true if initialized successfully, false if failed, null if not yet attempted
+     */
+    public static Boolean isInitializationSuccessful() {
+        return initializationSuccessful;
+    }
+
+    /**
+     * Get initialization error message if initialization failed.
+     *
+     * @return error message if initialization failed, null otherwise
+     */
+    public static String getInitializationError() {
+        return initializationError;
+    }
+
+    /**
      * Ensure required database tables exist.
      * This is a fallback mechanism for when Keycloak's automatic Liquibase
      * execution doesn't work (e.g., in development mode).
      */
     private void ensureTablesExist(KeycloakSessionFactory factory) {
-        KeycloakModelUtils.runJobInTransaction(factory, session -> {
-            try {
-                // Get EntityManager and access underlying JDBC connection via Hibernate
-                JpaConnectionProvider jpaProvider = session.getProvider(JpaConnectionProvider.class);
-                EntityManager em = jpaProvider.getEntityManager();
-                Session hibernateSession = em.unwrap(Session.class);
+        try {
+            KeycloakModelUtils.runJobInTransaction(factory, session -> {
+                try {
+                    // Get EntityManager and access underlying JDBC connection via Hibernate
+                    JpaConnectionProvider jpaProvider = session.getProvider(JpaConnectionProvider.class);
+                    EntityManager em = jpaProvider.getEntityManager();
+                    Session hibernateSession = em.unwrap(Session.class);
 
-                // Execute database operations with direct JDBC connection
-                hibernateSession.doWork(connection -> {
-                    try {
-                        // Check if tables already exist
-                        boolean allTablesExist = checkTablesExist(connection);
+                    // Execute database operations with direct JDBC connection
+                    hibernateSession.doWork(connection -> {
+                        try {
+                            // Check if tables already exist
+                            boolean allTablesExist = checkTablesExist(connection);
 
-                        if (allTablesExist) {
-                            logger.info("Auth41 Registration tables already exist - skipping initialization");
-                            return;
+                            if (allTablesExist) {
+                                logger.info("Auth41 Registration tables already exist - skipping initialization");
+                                initializationSuccessful = true;
+                                return;
+                            }
+
+                            logger.warn("Auth41 Registration tables not found - executing manual Liquibase update");
+                            executeLiquibaseChangelog(connection);
+                            logger.info("Auth41 Registration tables created successfully");
+                            initializationSuccessful = true;
+
+                        } catch (Exception e) {
+                            initializationSuccessful = false;
+                            initializationError = "Failed to create database tables: " + e.getMessage();
+                            logger.error("CRITICAL: Failed to ensure Auth41 Registration tables exist. " +
+                                       "The plugin will not function correctly until tables are created.", e);
+                            throw new RuntimeException("Database initialization failed", e);
                         }
+                    });
 
-                        logger.warn("Auth41 Registration tables not found - executing manual Liquibase update");
-                        executeLiquibaseChangelog(connection);
-                        logger.info("Auth41 Registration tables created successfully");
-
-                    } catch (Exception e) {
-                        logger.error("Failed to ensure Auth41 Registration tables exist", e);
-                        // Don't rethrow - allow Keycloak to continue starting
-                    }
-                });
-
-            } catch (Exception e) {
-                logger.error("Failed to access database for table initialization", e);
+                } catch (Exception e) {
+                    initializationSuccessful = false;
+                    initializationError = "Failed to access database: " + e.getMessage();
+                    logger.error("CRITICAL: Failed to access database for table initialization. " +
+                               "The plugin will not function correctly.", e);
+                    throw new RuntimeException("Database access failed", e);
+                }
+            });
+        } catch (Exception e) {
+            // Log the final error state
+            logger.error("Auth41 Registration Storage Provider initialization FAILED. " +
+                       "All operations will fail until this is resolved.", e);
+            // Set failure state if not already set
+            if (initializationSuccessful == null) {
+                initializationSuccessful = false;
+                initializationError = "Initialization transaction failed: " + e.getMessage();
             }
-        });
+        }
     }
 
     /**
@@ -150,63 +206,24 @@ public class JpaRegistrationStorageProviderFactory
     }
 
     /**
-     * Execute DDL to create tables.
-     * Executes SQL directly within the existing transaction managed by Keycloak.
+     * Execute Liquibase changelog to create tables.
+     * Uses Liquibase for database-agnostic schema management.
      */
     private void executeLiquibaseChangelog(Connection connection) throws Exception {
-        // Execute DDL directly - we're already in a Keycloak-managed transaction
-        try (java.sql.Statement stmt = connection.createStatement()) {
-            // Create invite tokens table
-            stmt.execute(
-                "CREATE TABLE IF NOT EXISTS auth41_invite_tokens (" +
-                "  invite_token VARCHAR(255) NOT NULL PRIMARY KEY, " +
-                "  ip_address VARCHAR(45) NOT NULL, " +
-                "  realm_id VARCHAR(255) NOT NULL, " +
-                "  created_at TIMESTAMP NOT NULL, " +
-                "  expires_at TIMESTAMP NOT NULL, " +
-                "  used_at TIMESTAMP, " +
-                "  used BOOLEAN NOT NULL" +
-                ")"
-            );
+        // Wrap the connection in a Liquibase JDBC connection
+        Database database = DatabaseFactory.getInstance()
+                .findCorrectDatabaseImplementation(new JdbcConnection(connection));
 
-            // Create index for rate limiting (ignore if exists)
-            try {
-                stmt.execute(
-                    "CREATE INDEX idx_ip_created " +
-                    "ON auth41_invite_tokens (ip_address, created_at)"
-                );
-            } catch (Exception e) {
-                // Ignore if index already exists
-                logger.debugf("Index idx_ip_created may already exist: %s", e.getMessage());
-            }
+        // Create Liquibase instance with our changelog
+        try (Liquibase liquibase = new Liquibase(
+                "META-INF/registration-changelog.xml",
+                new ClassLoaderResourceAccessor(),
+                database)) {
 
-            // Create registration requests table
-            stmt.execute(
-                "CREATE TABLE IF NOT EXISTS auth41_registration_requests (" +
-                "  request_id VARCHAR(255) NOT NULL PRIMARY KEY, " +
-                "  email VARCHAR(255) NOT NULL, " +
-                "  realm_id VARCHAR(255) NOT NULL, " +
-                "  attributes TEXT, " +
-                "  status VARCHAR(50) NOT NULL, " +
-                "  created_at TIMESTAMP NOT NULL, " +
-                "  approved_at TIMESTAMP, " +
-                "  expires_at TIMESTAMP NOT NULL, " +
-                "  user_id VARCHAR(255)" +
-                ")"
-            );
+            // Execute the changelog
+            liquibase.update(new Contexts());
 
-            // Create index for approval processor (ignore if exists)
-            try {
-                stmt.execute(
-                    "CREATE INDEX idx_status_created " +
-                    "ON auth41_registration_requests (status, created_at)"
-                );
-            } catch (Exception e) {
-                // Ignore if index already exists
-                logger.debugf("Index idx_status_created may already exist: %s", e.getMessage());
-            }
-
-            logger.info("Auth41 Registration tables created successfully via direct DDL");
+            logger.info("Auth41 Registration tables created successfully via Liquibase");
         }
     }
 

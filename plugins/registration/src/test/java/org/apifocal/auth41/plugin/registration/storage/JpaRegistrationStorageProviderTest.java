@@ -500,4 +500,92 @@ class JpaRegistrationStorageProviderTest {
 
         assertThat(deleted).isEqualTo(0);
     }
+
+    // Test-only methods for clearing data
+
+    @Test
+    void deleteAllInviteTokens_shouldDeleteAllTokens() {
+        // Given
+        Query query = mock(Query.class);
+        when(em.createQuery("DELETE FROM InviteTokenEntity")).thenReturn(query);
+        when(query.executeUpdate()).thenReturn(10);
+
+        // When
+        int deleted = provider.deleteAllInviteTokens();
+
+        // Then
+        assertThat(deleted).isEqualTo(10);
+        verify(em).createQuery("DELETE FROM InviteTokenEntity");
+        verify(query).executeUpdate();
+    }
+
+    @Test
+    void deleteAllInviteTokens_shouldReturnZeroWhenNoTokensExist() {
+        // Given
+        Query query = mock(Query.class);
+        when(em.createQuery("DELETE FROM InviteTokenEntity")).thenReturn(query);
+        when(query.executeUpdate()).thenReturn(0);
+
+        // When
+        int deleted = provider.deleteAllInviteTokens();
+
+        // Then
+        assertThat(deleted).isEqualTo(0);
+    }
+
+    @Test
+    void deleteAllInviteTokens_shouldPropagateExceptionOnFailure() {
+        // Given
+        Query query = mock(Query.class);
+        when(em.createQuery("DELETE FROM InviteTokenEntity")).thenReturn(query);
+        when(query.executeUpdate()).thenThrow(new PersistenceException("Database error"));
+
+        // When/Then
+        assertThatThrownBy(() -> provider.deleteAllInviteTokens())
+                .isInstanceOf(PersistenceException.class)
+                .hasMessageContaining("Database error");
+    }
+
+    @Test
+    void deleteAllRegistrationRequests_shouldDeleteAllRequests() {
+        // Given
+        Query query = mock(Query.class);
+        when(em.createQuery("DELETE FROM RegistrationRequestEntity")).thenReturn(query);
+        when(query.executeUpdate()).thenReturn(25);
+
+        // When
+        int deleted = provider.deleteAllRegistrationRequests();
+
+        // Then
+        assertThat(deleted).isEqualTo(25);
+        verify(em).createQuery("DELETE FROM RegistrationRequestEntity");
+        verify(query).executeUpdate();
+    }
+
+    @Test
+    void deleteAllRegistrationRequests_shouldReturnZeroWhenNoRequestsExist() {
+        // Given
+        Query query = mock(Query.class);
+        when(em.createQuery("DELETE FROM RegistrationRequestEntity")).thenReturn(query);
+        when(query.executeUpdate()).thenReturn(0);
+
+        // When
+        int deleted = provider.deleteAllRegistrationRequests();
+
+        // Then
+        assertThat(deleted).isEqualTo(0);
+    }
+
+    @Test
+    void deleteAllRegistrationRequests_shouldPropagateExceptionOnFailure() {
+        // Given
+        Query query = mock(Query.class);
+        when(em.createQuery("DELETE FROM RegistrationRequestEntity")).thenReturn(query);
+        when(query.executeUpdate()).thenThrow(new PersistenceException("Connection timeout"));
+
+        // When/Then
+        assertThatThrownBy(() -> provider.deleteAllRegistrationRequests())
+                .isInstanceOf(PersistenceException.class)
+                .hasMessageContaining("Connection timeout");
+    }
 }
