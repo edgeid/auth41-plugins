@@ -60,7 +60,7 @@ class StatusResourceTest {
         when(storage.getRegistrationRequest("test-request")).thenReturn(request);
 
         // When
-        Response response = resource.getStatus("test-request");
+        Response response = resource.getStatus(Map.of("request_id", "test-request"));
 
         // Then
         assertThat(response.getStatus()).isEqualTo(200);
@@ -88,7 +88,7 @@ class StatusResourceTest {
         when(storage.getRegistrationRequest("test-request")).thenReturn(request);
 
         // When
-        Response response = resource.getStatus("test-request");
+        Response response = resource.getStatus(Map.of("request_id", "test-request"));
 
         // Then
         assertThat(response.getStatus()).isEqualTo(200);
@@ -114,7 +114,7 @@ class StatusResourceTest {
         when(storage.getRegistrationRequest("test-request")).thenReturn(request);
 
         // When
-        Response response = resource.getStatus("test-request");
+        Response response = resource.getStatus(Map.of("request_id", "test-request"));
 
         // Then
         assertThat(response.getStatus()).isEqualTo(403); // Forbidden
@@ -140,7 +140,7 @@ class StatusResourceTest {
         when(storage.getRegistrationRequest("test-request")).thenReturn(request);
 
         // When
-        Response response = resource.getStatus("test-request");
+        Response response = resource.getStatus(Map.of("request_id", "test-request"));
 
         // Then
         assertThat(response.getStatus()).isEqualTo(400);
@@ -166,7 +166,7 @@ class StatusResourceTest {
         when(storage.getRegistrationRequest("test-request")).thenReturn(request);
 
         // When
-        Response response = resource.getStatus("test-request");
+        Response response = resource.getStatus(Map.of("request_id", "test-request"));
 
         // Then
         assertThat(response.getStatus()).isEqualTo(500);
@@ -182,7 +182,7 @@ class StatusResourceTest {
         when(storage.getRegistrationRequest("nonexistent")).thenReturn(null);
 
         // When
-        Response response = resource.getStatus("nonexistent");
+        Response response = resource.getStatus(Map.of("request_id", "nonexistent"));
 
         // Then
         assertThat(response.getStatus()).isEqualTo(404);
@@ -194,7 +194,7 @@ class StatusResourceTest {
     @Test
     void shouldReturnBadRequestWhenRequestIdEmpty() {
         // When
-        Response response = resource.getStatus("");
+        Response response = resource.getStatus(Map.of("request_id", ""));
 
         // Then
         assertThat(response.getStatus()).isEqualTo(400);
@@ -231,7 +231,7 @@ class StatusResourceTest {
         when(storage.getRegistrationRequest("test-request")).thenReturn(request);
 
         // When
-        Response response = resource.getStatus("test-request");
+        Response response = resource.getStatus(Map.of("request_id", "test-request"));
 
         // Then
         assertThat(response.getStatus()).isEqualTo(400);
@@ -259,7 +259,7 @@ class StatusResourceTest {
         when(storage.getRegistrationRequest("test-request")).thenReturn(request);
 
         // When
-        Response response = resource.getStatus("test-request");
+        Response response = resource.getStatus(Map.of("request_id", "test-request"));
 
         // Then
         assertThat(response.getStatus()).isEqualTo(400);
@@ -286,7 +286,7 @@ class StatusResourceTest {
         when(storage.getRegistrationRequest("test-request")).thenReturn(request);
 
         // When
-        Response response = resource.getStatus("test-request");
+        Response response = resource.getStatus(Map.of("request_id", "test-request"));
 
         // Then - Should still return approved status despite being past expiry
         assertThat(response.getStatus()).isEqualTo(200);
@@ -302,7 +302,7 @@ class StatusResourceTest {
                 .thenThrow(new RuntimeException("Database error"));
 
         // When
-        Response response = resource.getStatus("test-request");
+        Response response = resource.getStatus(Map.of("request_id", "test-request"));
 
         // Then
         assertThat(response.getStatus()).isEqualTo(500);
@@ -317,7 +317,7 @@ class StatusResourceTest {
         when(context.getRealm()).thenReturn(null);
 
         // When
-        Response response = resource.getStatus("test-request");
+        Response response = resource.getStatus(Map.of("request_id", "test-request"));
 
         // Then
         assertThat(response.getStatus()).isEqualTo(400);
@@ -342,7 +342,7 @@ class StatusResourceTest {
         when(storage.getRegistrationRequest("test-request")).thenReturn(request);
 
         // When
-        Response response = resource.getStatus("test-request");
+        Response response = resource.getStatus(Map.of("request_id", "test-request"));
 
         // Then
         @SuppressWarnings("unchecked")
@@ -368,7 +368,7 @@ class StatusResourceTest {
         when(storage.getRegistrationRequest("test-request")).thenReturn(request);
 
         // When
-        Response response = resource.getStatus("test-request");
+        Response response = resource.getStatus(Map.of("request_id", "test-request"));
 
         // Then
         assertThat(response.getStatus()).isEqualTo(200);

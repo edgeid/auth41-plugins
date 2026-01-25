@@ -1,8 +1,8 @@
 package org.apifocal.auth41.plugin.registration.resource;
 
-import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -20,7 +20,8 @@ import java.util.Map;
 /**
  * REST resource for registration status polling.
  *
- * <p>Endpoint: GET /realms/{realm}/registration/status/{requestId}
+ * <p>Endpoint: POST /realms/{realm}/registration/status
+ * <p>Request body: {"request_id": "..."}
  *
  * <p>Handles CIBA-style polling of registration request status.
  */
@@ -38,6 +39,13 @@ public class StatusResource {
 
     /**
      * Poll registration request status.
+     *
+     * <p>Request body:
+     * <pre>
+     * {
+     *   "request_id": "uuid-string"
+     * }
+     * </pre>
      *
      * <p>Response for pending request:
      * <pre>
@@ -63,13 +71,13 @@ public class StatusResource {
      * }
      * </pre>
      *
-     * @param requestId Registration request ID
+     * @param requestBody Request body containing request_id
      * @return Response with status or error
      */
-    @GET
-    @Path("{requestId}")
+    @POST
+    @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getStatus(@PathParam("requestId") String requestId) {
+    public Response getStatus(Map<String, Object> requestBody) {
         try {
             RealmModel realm = session.getContext().getRealm();
             if (realm == null) {
@@ -79,6 +87,14 @@ public class StatusResource {
                         .build();
             }
 
+            // Extract request_id from request body
+            if (requestBody == null) {
+                return Response.status(Response.Status.BAD_REQUEST)
+                        .entity(Map.of("error", "invalid_request", "error_description", "Request body is required"))
+                        .build();
+            }
+
+            String requestId = (String) requestBody.get("request_id");
             if (requestId == null || requestId.trim().isEmpty()) {
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity(Map.of("error", "invalid_request", "error_description", "request_id is required"))
@@ -133,6 +149,9 @@ public class StatusResource {
                     response.put("status", "approved");
                     if (request.getUserId() != null) {
                         response.put("user_id", request.getUserId());
+                    }
+                    if (request.getEmail() != null) {
+                        response.put("email", request.getEmail());
                     }
                     return Response.ok(response).build();
 

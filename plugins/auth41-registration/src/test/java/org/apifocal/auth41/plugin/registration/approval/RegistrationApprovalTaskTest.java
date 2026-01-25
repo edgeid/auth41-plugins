@@ -25,6 +25,7 @@ class RegistrationApprovalTaskTest {
     private RealmProvider realmProvider;
     private UserProvider userProvider;
     private RealmModel realm;
+    private KeycloakContext context;
     private RegistrationApprovalTask task;
 
     @BeforeEach
@@ -35,10 +36,12 @@ class RegistrationApprovalTaskTest {
         realmProvider = mock(RealmProvider.class);
         userProvider = mock(UserProvider.class);
         realm = mock(RealmModel.class);
+        context = mock(KeycloakContext.class);
 
         when(session.getProvider(RegistrationStorageProvider.class)).thenReturn(storage);
         when(session.realms()).thenReturn(realmProvider);
         when(session.users()).thenReturn(userProvider);
+        when(session.getContext()).thenReturn(context);
         when(realmProvider.getRealm("test-realm")).thenReturn(realm);
         when(realm.getId()).thenReturn("test-realm");
         when(realm.getName()).thenReturn("Test Realm");

@@ -213,6 +213,20 @@ public class JpaRegistrationStorageProvider implements RegistrationStorageProvid
     }
 
     @Override
+    public int deleteAllInviteTokens() {
+        logger.warn("TEST-ONLY: Deleting all invite tokens");
+        Query query = em.createQuery("DELETE FROM InviteTokenEntity");
+        return query.executeUpdate();
+    }
+
+    @Override
+    public int deleteAllRegistrationRequests() {
+        logger.warn("TEST-ONLY: Deleting all registration requests");
+        Query query = em.createQuery("DELETE FROM RegistrationRequestEntity");
+        return query.executeUpdate();
+    }
+
+    @Override
     public void close() {
         // EntityManager is managed by Keycloak
     }

@@ -81,8 +81,25 @@ public class RequestResource {
             // Validate request body
             String inviteTokenValue = (String) request.get("invite_token");
             String email = (String) request.get("email");
-            @SuppressWarnings("unchecked")
-            Map<String, Object> attributes = (Map<String, Object>) request.get("attributes");
+
+            // Handle attributes - could be Map or null
+            Map<String, Object> attributes = null;
+            Object attributesObj = request.get("attributes");
+            if (attributesObj != null) {
+                if (attributesObj instanceof Map) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> attrsMap = (Map<String, Object>) attributesObj;
+                    attributes = attrsMap;
+                } else {
+                    // If attributes is not a Map (e.g., String or other type), reject it
+                    logger.warnf("Invalid attributes type: %s", attributesObj.getClass().getName());
+                    return Response.status(Response.Status.BAD_REQUEST)
+                            .entity(Map.of("error", "invalid_request", "error_description", "attributes must be a JSON object"))
+                            .build();
+                }
+            } else {
+                attributes = new HashMap<>();
+            }
 
             if (inviteTokenValue == null || inviteTokenValue.trim().isEmpty()) {
                 return Response.status(Response.Status.BAD_REQUEST)
@@ -94,10 +111,6 @@ public class RequestResource {
                 return Response.status(Response.Status.BAD_REQUEST)
                         .entity(Map.of("error", "invalid_request", "error_description", "Valid email is required"))
                         .build();
-            }
-
-            if (attributes == null) {
-                attributes = new HashMap<>();
             }
 
             // Validate attributes size and content
@@ -178,7 +191,9 @@ public class RequestResource {
             Map<String, Object> response = new HashMap<>();
             response.put("request_id", requestId);
             response.put("status", "pending");
-            response.put("polling_interval", config.getPollingIntervalSeconds());
+            response.put("expires_in", config.getRequestTtlSeconds());
+            response.put("interval", config.getPollingIntervalSeconds());
+            response.put("polling_interval", config.getPollingIntervalSeconds()); // Legacy field
 
             return Response.status(Response.Status.CREATED).entity(response).build();
 

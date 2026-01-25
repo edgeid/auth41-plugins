@@ -114,4 +114,22 @@ public interface RegistrationStorageProvider extends Provider {
      * @return Number of requests deleted
      */
     int deleteExpiredRegistrationRequests(Instant expiredBefore);
+
+    // Test-only operations
+
+    /**
+     * Delete all invite tokens (test-only).
+     * <p>WARNING: This is for testing purposes only.
+     *
+     * @return Number of tokens deleted
+     */
+    int deleteAllInviteTokens();
+
+    /**
+     * Delete all registration requests (test-only).
+     * <p>WARNING: This is for testing purposes only.
+     *
+     * @return Number of requests deleted
+     */
+    int deleteAllRegistrationRequests();
 }

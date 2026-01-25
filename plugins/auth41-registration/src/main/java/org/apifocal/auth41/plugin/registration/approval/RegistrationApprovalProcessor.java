@@ -97,6 +97,9 @@ public class RegistrationApprovalProcessor {
             throw new IllegalStateException("Realm not found: " + request.getRealmId());
         }
 
+        // Set realm in session context - required for user operations
+        session.getContext().setRealm(realm);
+
         // Check if user already exists
         if (session.users().getUserByEmail(realm, request.getEmail()) != null) {
             logger.warnf("User with email %s already exists in realm %s, marking request as error",
