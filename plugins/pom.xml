@@ -17,15 +17,15 @@
     <description>Parent POM for Auth41 Keycloak plugins</description>
 
     <modules>
-        <module>auth41-accounts</module>
-        <module>auth41-backchannel-file</module>
-        <module>auth41-backchannel-mock</module>
-        <module>auth41-ciba</module>
-        <module>auth41-discovery</module>
-        <module>auth41-federation-broker</module>
-        <module>auth41-registration</module>
-        <module>auth41-themes</module>
-        <module>auth41-topology</module>
-        <module>auth41-trust-network</module>
+        <module>accounts</module>
+        <module>backchannel-file</module>
+        <module>backchannel-mock</module>
+        <module>ciba</module>
+        <module>discovery</module>
+        <module>federation-broker</module>
+        <module>registration</module>
+        <module>themes</module>
+        <module>topology</module>
+        <module>trust-network</module>
     </modules>
 </project>
