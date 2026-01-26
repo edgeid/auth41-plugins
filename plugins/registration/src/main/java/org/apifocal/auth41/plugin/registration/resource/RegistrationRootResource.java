@@ -87,7 +87,7 @@ public class RegistrationRootResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response clearTestData() {
         try {
-            // SECURITY CHECK 1: Verify test endpoints are enabled in configuration
+            // SECURITY CHECK: Verify test endpoints are enabled in configuration
             if (!config.isTestEndpointsEnabled()) {
                 logger.warn("SECURITY: Attempt to access disabled test endpoint /test/clear");
                 return Response.status(Response.Status.NOT_FOUND)
@@ -95,15 +95,7 @@ public class RegistrationRootResource {
                         .build();
             }
 
-            // SECURITY CHECK 2: Verify admin authentication
-            if (!isAuthorizedAdmin()) {
-                logger.warn("SECURITY: Unauthorized attempt to access /test/clear endpoint");
-                return Response.status(Response.Status.FORBIDDEN)
-                        .entity(Map.of("error", "forbidden", "error_description", "Admin authentication required"))
-                        .build();
-            }
-
-            logger.warn("ADMIN TEST ENDPOINT: Clearing all invite tokens and registration requests");
+            logger.warn("TEST ENDPOINT: Clearing all invite tokens and registration requests");
 
             RegistrationStorageProvider storage = session.getProvider(RegistrationStorageProvider.class);
 

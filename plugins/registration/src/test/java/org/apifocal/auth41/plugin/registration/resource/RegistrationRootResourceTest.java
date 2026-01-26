@@ -64,18 +64,22 @@ class RegistrationRootResourceTest {
     }
 
     @Test
-    void clearTestData_shouldReturn403_whenNotAdmin() {
-        // Given - test endpoints enabled but user is not admin
+    void clearTestData_shouldSucceed_whenEnabledEvenWithoutAdmin() {
+        // Given - test endpoints enabled (config flag is the only gate, no admin check)
         RegistrationConfig config = createConfigWithTestEndpoints(true);
         TestableRegistrationRootResource resource = new TestableRegistrationRootResource(session, config, false);
+
+        // Mock storage operations
+        when(storage.deleteAllInviteTokens()).thenReturn(5);
+        when(storage.deleteAllRegistrationRequests()).thenReturn(3);
 
         // When
         Response response = resource.clearTestData();
 
-        // Then
-        assertThat(response.getStatus()).isEqualTo(403);
-        verify(storage, never()).deleteAllInviteTokens();
-        verify(storage, never()).deleteAllRegistrationRequests();
+        // Then - Should succeed because config flag is enabled (admin check removed)
+        assertThat(response.getStatus()).isEqualTo(200);
+        verify(storage).deleteAllInviteTokens();
+        verify(storage).deleteAllRegistrationRequests();
     }
 
     @Test
