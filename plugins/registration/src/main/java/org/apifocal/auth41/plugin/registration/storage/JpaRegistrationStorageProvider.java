@@ -25,6 +25,8 @@ import java.util.stream.Collectors;
 public class JpaRegistrationStorageProvider implements RegistrationStorageProvider {
 
     private static final Logger logger = Logger.getLogger(JpaRegistrationStorageProvider.class);
+    private static final java.util.concurrent.atomic.AtomicBoolean tablesInitialized =
+        new java.util.concurrent.atomic.AtomicBoolean(false);
 
     private final KeycloakSession session;
     private final EntityManager em;
@@ -32,6 +34,83 @@ public class JpaRegistrationStorageProvider implements RegistrationStorageProvid
     public JpaRegistrationStorageProvider(KeycloakSession session) {
         this.session = session;
         this.em = session.getProvider(JpaConnectionProvider.class).getEntityManager();
+
+        // Lazy table creation on first provider instantiation
+        if (tablesInitialized.compareAndSet(false, true)) {
+            ensureTablesExist();
+        }
+    }
+
+    /**
+     * Ensure tables exist - lazy initialization fallback for development mode.
+     */
+    private void ensureTablesExist() {
+        try {
+            // Try to query a table - if it fails, create the tables
+            em.createQuery("SELECT COUNT(t) FROM InviteTokenEntity t", Long.class).getSingleResult();
+            logger.debug("Registration tables already exist");
+        } catch (Exception e) {
+            // Tables don't exist - create them
+            logger.warn("Registration tables not found, creating via DDL");
+            createTables();
+        }
+    }
+
+    /**
+     * Create tables using direct JDBC.
+     */
+    private void createTables() {
+        try {
+            // Get Hibernate Session first, then JDBC Connection
+            org.hibernate.Session hibernateSession = em.unwrap(org.hibernate.Session.class);
+            hibernateSession.doWork(connection -> {
+            try (java.sql.Statement stmt = connection.createStatement()) {
+                // Create invite tokens table
+                stmt.execute(
+                    "CREATE TABLE IF NOT EXISTS auth41_invite_tokens (" +
+                    "  invite_token VARCHAR(255) PRIMARY KEY," +
+                    "  ip_address VARCHAR(255) NOT NULL," +
+                    "  realm_id VARCHAR(255) NOT NULL," +
+                    "  created_at TIMESTAMP NOT NULL," +
+                    "  expires_at TIMESTAMP NOT NULL," +
+                    "  used_at TIMESTAMP," +
+                    "  used BOOLEAN NOT NULL" +
+                    ")"
+                );
+
+                // Create registration requests table
+                stmt.execute(
+                    "CREATE TABLE IF NOT EXISTS auth41_registration_requests (" +
+                    "  request_id VARCHAR(255) PRIMARY KEY," +
+                    "  email VARCHAR(255) NOT NULL," +
+                    "  realm_id VARCHAR(255) NOT NULL," +
+                    "  attributes CLOB," +
+                    "  status VARCHAR(50) NOT NULL," +
+                    "  created_at TIMESTAMP NOT NULL," +
+                    "  approved_at TIMESTAMP," +
+                    "  expires_at TIMESTAMP NOT NULL," +
+                    "  user_id VARCHAR(255)" +
+                    ")"
+                );
+
+                // Create indexes (ignore failures if they exist)
+                try {
+                    stmt.execute("CREATE INDEX IF NOT EXISTS idx_ip_created ON auth41_invite_tokens(ip_address, created_at)");
+                } catch (Exception ex) {
+                    logger.debug("Index creation skipped (may already exist)", ex);
+                }
+                try {
+                    stmt.execute("CREATE INDEX IF NOT EXISTS idx_status_created ON auth41_registration_requests(status, created_at)");
+                } catch (Exception ex) {
+                    logger.debug("Index creation skipped (may already exist)", ex);
+                }
+
+                logger.info("Registration tables created successfully");
+            }
+            });
+        } catch (Exception e) {
+            logger.error("Failed to create registration tables", e);
+        }
     }
 
     // Invite token operations
